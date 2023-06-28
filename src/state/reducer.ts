@@ -12,6 +12,7 @@ import { routingApiV2 } from './routing/v2Slice'
 import transactions from './transactions/reducer'
 import user from './user/reducer'
 import wallets from './wallets/reducer'
+import modifications from './modifications/reducer'
 
 export default {
   application,
@@ -27,4 +28,5 @@ export default {
   logs,
   [routingApi.reducerPath]: routingApi.reducer,
   [routingApiV2.reducerPath]: routingApiV2.reducer,
+  modifications,
 }

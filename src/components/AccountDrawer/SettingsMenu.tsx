@@ -12,6 +12,7 @@ import { GitVersionRow } from './GitVersionRow'
 import { SlideOutMenu } from './SlideOutMenu'
 import { SmallBalanceToggle } from './SmallBalanceToggle'
 import { TestnetsToggle } from './TestnetsToggle'
+import { TokenBalances } from './TokenBalances'
 
 const InternalLinkMenuItem = styled(Link)`
   ${ClickableStyle}
@@ -64,6 +65,7 @@ export default function SettingsMenu({ onClose }: { onClose: () => void }) {
         <ThemeToggle />
         <SmallBalanceToggle />
         <TestnetsToggle />
+        <TokenBalances />
       </ToggleWrapper>
 
       <SectionTitle data-testid="wallet-header">

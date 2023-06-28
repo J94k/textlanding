@@ -32,7 +32,7 @@ import DarkModeQueryParamReader from '../theme/components/DarkModeQueryParamRead
 import AddLiquidity from './AddLiquidity'
 import { RedirectDuplicateTokenIds } from './AddLiquidity/redirects'
 import { RedirectDuplicateTokenIdsV2 } from './AddLiquidityV2/redirects'
-import Landing from './Landing'
+// import Landing from './Landing'
 import MigrateV2 from './MigrateV2'
 import MigrateV2Pair from './MigrateV2/MigrateV2Pair'
 import NotFound from './NotFound'
@@ -210,7 +210,8 @@ export default function App() {
             <Suspense fallback={<Loader />}>
               {isLoaded ? (
                 <Routes>
-                  <Route path="/" element={<Landing />} />
+                  {/* <Route path="/" element={<Landing />} /> */}
+                  <Route path="/" element={<Swap />} />
 
                   <Route path="tokens" element={<Tokens />}>
                     <Route path=":chainName" />
