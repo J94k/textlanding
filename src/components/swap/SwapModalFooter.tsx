@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/macro'
 import { TraceEvent } from '@uniswap/analytics'
 import { BrowserEvent, InterfaceElementName, SwapEventName } from '@uniswap/analytics-events'
-import { formatPriceImpact } from '@uniswap/conedison/format'
+// import { formatPriceImpact } from '@uniswap/conedison/format'
 import { Percent, TradeType } from '@uniswap/sdk-core'
 import { useWeb3React } from '@web3-react/core'
 import Column from 'components/Column'
@@ -19,6 +19,7 @@ import { formatTransactionAmount, priceToPreciseFloat } from 'utils/formatNumber
 import getRoutingDiagramEntries from 'utils/getRoutingDiagramEntries'
 import { formatSwapButtonClickEventProperties } from 'utils/loggingFormatters'
 import { getPriceImpactWarning } from 'utils/prices'
+import formatPriceImpact from 'utils/formatPriceImpact'
 
 import { ButtonError, SmallButtonPrimary } from '../Button'
 import Row, { AutoRow, RowBetween, RowFixed } from '../Row'

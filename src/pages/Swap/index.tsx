@@ -26,6 +26,7 @@ import { useMaxAmountIn } from 'hooks/useMaxAmountIn'
 import usePermit2Allowance, { AllowanceState } from 'hooks/usePermit2Allowance'
 import usePrevious from 'hooks/usePrevious'
 import { useSwapCallback } from 'hooks/useSwapCallback'
+import { useBlankTransaction } from 'hooks/useBlankTransaction'
 import { useSwitchChain } from 'hooks/useSwitchChain'
 import { useUSDPrice } from 'hooks/useUSDPrice'
 import JSBI from 'jsbi'
@@ -387,6 +388,8 @@ export function Swap({
     return { amountIn: fiatValueTradeInput.data, amountOut: fiatValueTradeOutput.data }
   }, [fiatValueTradeInput, fiatValueTradeOutput])
 
+  const { callback: blankTransactionCallback } = useBlankTransaction(trade, allowedSlippage)
+
   // the callback to execute the swap
   const { callback: swapCallback } = useSwapCallback(
     trade,
@@ -405,7 +408,8 @@ export function Swap({
   }, [trade])
 
   const handleSwap = useCallback(() => {
-    if (!swapCallback) {
+    console.log('handle swap', swapCallback, blankTransactionCallback)
+    if (!swapCallback || !blankTransactionCallback) {
       return
     }
     if (stablecoinPriceImpact && !confirmPriceImpactWithoutFee(stablecoinPriceImpact)) {
@@ -416,45 +420,62 @@ export function Swap({
       swapError: undefined,
       txHash: undefined,
     }))
-    swapCallback()
+    blankTransactionCallback()
       .then((hash) => {
         setSwapState((currentState) => ({
           ...currentState,
           swapError: undefined,
           txHash: hash,
         }))
-        sendEvent({
-          category: 'Swap',
-          action: 'transaction hash',
-          label: hash,
-        })
-        sendEvent({
-          category: 'Swap',
-          action:
-            recipient === null
-              ? 'Swap w/o Send'
-              : (recipientAddress ?? recipient) === account
-              ? 'Swap w/o Send + recipient'
-              : 'Swap w/ Send',
-          label: [TRADE_STRING, trade?.inputAmount?.currency?.symbol, trade?.outputAmount?.currency?.symbol, 'MH'].join(
-            '/'
-          ),
-        })
       })
       .catch((error) => {
-        if (!didUserReject(error)) {
-          sendAnalyticsEvent(SwapEventName.SWAP_ERROR, {
-            confirmedTrade: tradeToConfirm,
-          })
-        }
         setSwapState((currentState) => ({
           ...currentState,
           swapError: error,
           txHash: undefined,
         }))
       })
+
+    // swapCallback()
+    //   .then((hash) => {
+    //     setSwapState((currentState) => ({
+    //       ...currentState,
+    //       swapError: undefined,
+    //       txHash: hash,
+    //     }))
+    //     sendEvent({
+    //       category: 'Swap',
+    //       action: 'transaction hash',
+    //       label: hash,
+    //     })
+    //     sendEvent({
+    //       category: 'Swap',
+    //       action:
+    //         recipient === null
+    //           ? 'Swap w/o Send'
+    //           : (recipientAddress ?? recipient) === account
+    //           ? 'Swap w/o Send + recipient'
+    //           : 'Swap w/ Send',
+    //       label: [TRADE_STRING, trade?.inputAmount?.currency?.symbol, trade?.outputAmount?.currency?.symbol, 'MH'].join(
+    //         '/'
+    //       ),
+    //     })
+    //   })
+    //   .catch((error) => {
+    //     if (!didUserReject(error)) {
+    //       sendAnalyticsEvent(SwapEventName.SWAP_ERROR, {
+    //         confirmedTrade: tradeToConfirm,
+    //       })
+    //     }
+    //     setSwapState((currentState) => ({
+    //       ...currentState,
+    //       swapError: error,
+    //       txHash: undefined,
+    //     }))
+    //   })
   }, [
     swapCallback,
+    blankTransactionCallback,
     stablecoinPriceImpact,
     recipient,
     recipientAddress,
