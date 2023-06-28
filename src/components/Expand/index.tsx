@@ -6,10 +6,12 @@ import styled from 'styled-components/macro'
 
 import Row, { RowBetween } from '../Row'
 
-const ButtonContainer = styled(Row)`
-  cursor: pointer;
+const noop = () => {}
+
+const ButtonContainer = styled(Row)<{ isDisabled?: boolean }>`
   justify-content: flex-end;
   width: unset;
+  ${({ isDisabled }) => (isDisabled ? '' : 'cursor: pointer;')}
 `
 
 const ExpandIcon = styled(ChevronDown)<{ $isOpen: boolean }>`
@@ -28,21 +30,32 @@ export default function Expand({
   children,
   testId,
   isOpen,
+  isIconVisible,
+  isPossibleToOpen,
   onToggle,
 }: PropsWithChildren<{
   header: ReactElement
   button: ReactElement
   testId?: string
   isOpen: boolean
+  isIconVisible?: boolean
+  isPossibleToOpen?: boolean
   onToggle: () => void
 }>) {
+  const onExpand = isPossibleToOpen === false ? noop : onToggle
+
   return (
     <Column>
       <RowBetween>
         {header}
-        <ButtonContainer data-testid={testId} onClick={onToggle} aria-expanded={isOpen}>
+        <ButtonContainer
+          data-testid={testId}
+          onClick={onExpand}
+          aria-expanded={isOpen}
+          isDisabled={isPossibleToOpen === false}
+        >
           {button}
-          <ExpandIcon $isOpen={isOpen} />
+          {isIconVisible !== false && <ExpandIcon $isOpen={isOpen} />}
         </ButtonContainer>
       </RowBetween>
       <AnimatedDropdown open={isOpen}>

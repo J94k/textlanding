@@ -1,3 +1,5 @@
+import JSBI from 'jsbi'
+import { Percent } from '@uniswap/sdk-core'
 import { createSlice } from '@reduxjs/toolkit'
 import { ConnectionType } from 'connection/types'
 import { SupportedLocale } from 'constants/locales'
@@ -64,7 +66,8 @@ export const initialState: UserState = {
   userLocale: null,
   userRouterPreference: RouterPreference.AUTO,
   userHideClosedPositions: false,
-  userSlippageTolerance: SlippageTolerance.Auto,
+  // Set slippage to 0.5%
+  userSlippageTolerance: JSBI.toNumber(new Percent(5, 10_000).multiply(10_000).quotient), // SlippageTolerance.Auto,
   userSlippageToleranceHasBeenMigratedToAuto: true,
   userDeadline: DEFAULT_DEADLINE_FROM_NOW,
   tokens: {},
