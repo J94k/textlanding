@@ -58,7 +58,7 @@ export function useBlankTransaction(trade: Trade<Currency, Currency, TradeType> 
         return
       }
     }
-  }, [account, chainId, provider, trade, allowedSlippage])
+  }, [account, chainId, provider, trade, allowedSlippage, addTransaction, deadline])
 
   return {
     callback,

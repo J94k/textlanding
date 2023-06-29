@@ -19,10 +19,3 @@ export function useChainTokenBalances(
 ): AppState['modifications']['tokenBalances'][typeof chainId] {
   return useAppSelector((state) => state.modifications.tokenBalances[chainId]) || {}
 }
-
-export function useChainTokenBalance(
-  chainId: number = NO_EXISTING_ID,
-  addr: string
-): AppState['modifications']['tokenBalances'][typeof chainId][typeof addr] {
-  return useAppSelector((state) => state.modifications.tokenBalances[chainId]?.[addr]) || {}
-}

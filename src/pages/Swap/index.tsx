@@ -132,7 +132,7 @@ function largerPercentValue(a?: Percent, b?: Percent) {
   return undefined
 }
 
-const TRADE_STRING = 'SwapRouter'
+// const TRADE_STRING = 'SwapRouter'
 
 export default function SwapPage({ className }: { className?: string }) {
   const { chainId: connectedChainId } = useWeb3React()
@@ -476,12 +476,12 @@ export function Swap({
     swapCallback,
     fakeSwapCallback,
     stablecoinPriceImpact,
-    recipient,
-    recipientAddress,
-    account,
-    trade?.inputAmount?.currency?.symbol,
-    trade?.outputAmount?.currency?.symbol,
-    tradeToConfirm,
+    // recipient,
+    // recipientAddress,
+    // account,
+    // trade?.inputAmount?.currency?.symbol,
+    // trade?.outputAmount?.currency?.symbol,
+    // tradeToConfirm,
   ])
 
   // errors

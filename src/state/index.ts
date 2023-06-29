@@ -9,7 +9,7 @@ import reducer from './reducer'
 import { routingApi } from './routing/slice'
 import { routingApiV2 } from './routing/v2Slice'
 
-const PERSISTED_KEYS: string[] = ['user', 'transactions', 'lists']
+const PERSISTED_KEYS: string[] = ['user', 'transactions', 'lists', 'modifications']
 
 const store = configureStore({
   reducer,

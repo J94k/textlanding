@@ -14,7 +14,7 @@ import {
 
 const NATIVE_CURRENCY_DECIMALS = 18
 
-export interface ModificationsState {
+interface ModificationsState {
   readonly nativeBalances: {
     [chainId: number]: {
       balance: number
