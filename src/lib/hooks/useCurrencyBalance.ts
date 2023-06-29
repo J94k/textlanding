@@ -44,7 +44,7 @@ export function useNativeCurrencyBalances(uncheckedAddresses?: (string | undefin
     () =>
       validAddressInputs.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, [address], i) => {
         if (nativeBalance && chainId) {
-          memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), nativeBalance.JSBIBalance)
+          memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), nativeBalance.weiBalance)
         } else {
           const value = results?.[i]?.result?.[0]
 

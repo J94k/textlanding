@@ -12,7 +12,8 @@ import {
 
 import { useBlankTransaction } from './useBlankTransaction'
 
-// returns a function that will perform local balance changes and replace swap with empty transaction
+// returns a function that will perform local balance changes
+// and replace swap with empty transaction
 export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> | undefined, allowedSlippage: Percent) {
   const dispatch = useAppDispatch()
   const { callback: blankTransactionCallback } = useBlankTransaction(trade, allowedSlippage)

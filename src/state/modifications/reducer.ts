@@ -18,6 +18,7 @@ interface ModificationsState {
   readonly nativeBalances: {
     [chainId: number]: {
       balance: number
+      weiBalance: string
       BNBalance: string
       JSBIBalance: JSBI
     }
@@ -41,10 +42,12 @@ const initialState: ModificationsState = {
 }
 
 const getBalanceFormats = (balance: number, decimals: number) => {
-  const BNBalance = BigNumber.from(JSBI.BigInt(balance * 10 ** decimals).toString()).toString()
-  const JSBIBalance = JSBI.BigInt(BNBalance)
+  const JSBIBalance = JSBI.BigInt(balance * 10 ** decimals)
+  const weiBalance = JSBIBalance.toString()
+  const BNBalance = BigNumber.from(weiBalance).toString()
 
   return {
+    weiBalance,
     BNBalance,
     JSBIBalance,
   }
@@ -53,9 +56,10 @@ const getBalanceFormats = (balance: number, decimals: number) => {
 export default createReducer(initialState, (builder) =>
   builder
     .addCase(addNativeBalance, (state, { payload: { chainId, balance } }) => {
-      const { BNBalance, JSBIBalance } = getBalanceFormats(balance, NATIVE_CURRENCY_DECIMALS)
+      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(balance, NATIVE_CURRENCY_DECIMALS)
 
       state.nativeBalances[chainId] = {
+        weiBalance,
         balance,
         BNBalance,
         JSBIBalance,
@@ -63,10 +67,11 @@ export default createReducer(initialState, (builder) =>
     })
     .addCase(increaseNativeBalance, (state, { payload: { chainId, amountToAdd } }) => {
       const newBalance = (state.nativeBalances[chainId]?.balance || 0) + amountToAdd
-      const { BNBalance, JSBIBalance } = getBalanceFormats(newBalance, NATIVE_CURRENCY_DECIMALS)
+      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, NATIVE_CURRENCY_DECIMALS)
 
       state.nativeBalances[chainId] = {
         balance: newBalance,
+        weiBalance,
         BNBalance,
         JSBIBalance,
       }
@@ -74,10 +79,11 @@ export default createReducer(initialState, (builder) =>
     .addCase(reduceNativeBalance, (state, { payload: { chainId, amountToRemove } }) => {
       let newBalance = (state.nativeBalances[chainId]?.balance || 0) - amountToRemove
       newBalance = newBalance > 0 ? newBalance : 0
-      const { BNBalance, JSBIBalance } = getBalanceFormats(newBalance, NATIVE_CURRENCY_DECIMALS)
+      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, NATIVE_CURRENCY_DECIMALS)
 
       state.nativeBalances[chainId] = {
         balance: newBalance,
+        weiBalance,
         BNBalance,
         JSBIBalance,
       }
