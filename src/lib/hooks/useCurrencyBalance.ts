@@ -11,8 +11,11 @@ import { useMemo } from 'react'
 import { nativeOnChain } from '../../constants/tokens'
 import { useInterfaceMulticall } from '../../hooks/useContract'
 import { isAddress } from '../../utils'
-// @note architecturally incorrect imort - state to lib
-import { useTokenBalances as useCustomTokenBalances } from 'state/modifications/hooks'
+// @note architecturally incorrect import - state to lib
+import {
+  useNativeBalance as useCustomNativeBalance,
+  useChainTokenBalances as useCustomChainTokenBalances,
+} from 'state/modifications/hooks'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
@@ -36,16 +39,22 @@ export function useNativeCurrencyBalances(uncheckedAddresses?: (string | undefin
   )
 
   const results = useSingleContractMultipleData(multicallContract, 'getEthBalance', validAddressInputs)
+  const nativeBalance = useCustomNativeBalance(chainId)
 
   return useMemo(
     () =>
       validAddressInputs.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, [address], i) => {
-        const value = results?.[i]?.result?.[0]
-        if (value && chainId)
-          memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), JSBI.BigInt(value.toString()))
+        if (nativeBalance && chainId) {
+          memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), nativeBalance.JSBIBalance)
+        } else {
+          const value = results?.[i]?.result?.[0]
+
+          if (value && chainId)
+            memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), JSBI.BigInt(value.toString()))
+        }
         return memo
       }, {}),
-    [validAddressInputs, chainId, results]
+    [validAddressInputs, chainId, results, nativeBalance]
   )
 }
 
@@ -65,7 +74,7 @@ export function useTokenBalancesWithLoadingIndicator(
     [chainId, tokens]
   )
   const validatedTokenAddresses = useMemo(() => validatedTokens.map((vt) => vt.address), [validatedTokens])
-  const customTokenBalances = useCustomTokenBalances()
+  const customTokenBalances = useCustomChainTokenBalances(chainId)
 
   const balances = useMultipleContractSingleData(
     validatedTokenAddresses,
