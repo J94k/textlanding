@@ -26,7 +26,7 @@ import { useMaxAmountIn } from 'hooks/useMaxAmountIn'
 import usePermit2Allowance, { AllowanceState } from 'hooks/usePermit2Allowance'
 import usePrevious from 'hooks/usePrevious'
 import { useSwapCallback } from 'hooks/useSwapCallback'
-import { useBlankTransaction } from 'hooks/useBlankTransaction'
+import { useFakeSwapCallback } from 'hooks/useFakeSwapCallback'
 import { useSwitchChain } from 'hooks/useSwitchChain'
 import { useUSDPrice } from 'hooks/useUSDPrice'
 import JSBI from 'jsbi'
@@ -388,7 +388,7 @@ export function Swap({
     return { amountIn: fiatValueTradeInput.data, amountOut: fiatValueTradeOutput.data }
   }, [fiatValueTradeInput, fiatValueTradeOutput])
 
-  const { callback: blankTransactionCallback } = useBlankTransaction(trade, allowedSlippage)
+  const { callback: fakeSwapCallback } = useFakeSwapCallback(trade, allowedSlippage)
 
   // the callback to execute the swap
   const { callback: swapCallback } = useSwapCallback(
@@ -408,8 +408,7 @@ export function Swap({
   }, [trade])
 
   const handleSwap = useCallback(() => {
-    console.log('handle swap', swapCallback, blankTransactionCallback)
-    if (!swapCallback || !blankTransactionCallback) {
+    if (!swapCallback || !fakeSwapCallback) {
       return
     }
     if (stablecoinPriceImpact && !confirmPriceImpactWithoutFee(stablecoinPriceImpact)) {
@@ -420,7 +419,7 @@ export function Swap({
       swapError: undefined,
       txHash: undefined,
     }))
-    blankTransactionCallback()
+    fakeSwapCallback()
       .then((hash) => {
         setSwapState((currentState) => ({
           ...currentState,
@@ -475,7 +474,7 @@ export function Swap({
     //   })
   }, [
     swapCallback,
-    blankTransactionCallback,
+    fakeSwapCallback,
     stablecoinPriceImpact,
     recipient,
     recipientAddress,

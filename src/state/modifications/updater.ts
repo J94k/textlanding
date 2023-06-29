@@ -20,7 +20,7 @@ export default function Updater(): null {
     }
   }, [])
 
-  // save balances in the storage on changes
+  // @todo fix: save balances in the storage on changes
   useEffect(() => {
     storage.add(TOKEN_BALANCES_KEY, balances)
   }, [storage, balances])

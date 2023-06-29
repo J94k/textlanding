@@ -1,6 +1,7 @@
 import { Interface } from '@ethersproject/abi'
 import { Currency, CurrencyAmount, Token } from '@uniswap/sdk-core'
 import { useWeb3React } from '@web3-react/core'
+import { BigNumber } from 'ethers'
 import ERC20ABI from 'abis/erc20.json'
 import { Erc20Interface } from 'abis/types/Erc20'
 import JSBI from 'jsbi'
@@ -10,6 +11,8 @@ import { useMemo } from 'react'
 import { nativeOnChain } from '../../constants/tokens'
 import { useInterfaceMulticall } from '../../hooks/useContract'
 import { isAddress } from '../../utils'
+// @note architecturally incorrect imort - state to lib
+import { useTokenBalances as useCustomTokenBalances } from 'state/modifications/hooks'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
@@ -62,6 +65,7 @@ export function useTokenBalancesWithLoadingIndicator(
     [chainId, tokens]
   )
   const validatedTokenAddresses = useMemo(() => validatedTokens.map((vt) => vt.address), [validatedTokens])
+  const customTokenBalances = useCustomTokenBalances()
 
   const balances = useMultipleContractSingleData(
     validatedTokenAddresses,
@@ -77,17 +81,25 @@ export function useTokenBalancesWithLoadingIndicator(
     () => [
       address && validatedTokens.length > 0
         ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
-            const value = balances?.[i]?.result?.[0]
-            const amount = value ? JSBI.BigInt(value.toString()) : undefined
-            if (amount) {
-              memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+            const customData = customTokenBalances[token.address]
+
+            if (customData?.JSBIBalance) {
+              memo[token.address] = CurrencyAmount.fromRawAmount(token, customData.JSBIBalance)
+            } else {
+              const value = balances?.[i]?.result?.[0]
+              const amount = value ? JSBI.BigInt(value.toString()) : undefined
+
+              if (amount) {
+                memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+              }
             }
+
             return memo
           }, {})
         : {},
       anyLoading,
     ],
-    [address, validatedTokens, anyLoading, balances]
+    [address, validatedTokens, anyLoading, balances, customTokenBalances]
   )
 }
 
