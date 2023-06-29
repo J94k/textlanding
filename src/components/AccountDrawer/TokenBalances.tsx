@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { batch } from 'react-redux'
 import { useWeb3React } from '@web3-react/core'
-import { Trans } from '@lingui/macro'
-import styled from 'styled-components/macro'
-import { ThemedText } from 'theme'
+import styled, { css } from 'styled-components/macro'
 import { shortenAddress } from 'utils'
+import { nativeOnChain } from '../../constants/tokens'
 import { useDefaultActiveTokens } from 'hooks/Tokens'
 import { useAppDispatch } from 'state/hooks'
 import { addNativeBalance, addTokenBalances } from 'state/modifications/actions'
 import { useNativeBalance, useChainTokenBalances } from 'state/modifications/hooks'
 
-const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/
+const StyledWrapper = styled.div`
+  margin-bottom: 24px;
+`
 
 const StyledLock = styled.div<{ isLocked?: boolean }>`
   ${({ isLocked }) =>
@@ -22,28 +23,36 @@ const StyledLock = styled.div<{ isLocked?: boolean }>`
 `
 
 const StyledTokensList = styled.div`
+  max-height: 500px;
+  overflow-y: auto;
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.backgroundOutline};
 `
 
-const StyledTokensListRow = styled.div`
+const StyledTokensListRow = styled.div<{ isHorizontal?: boolean }>`
   padding: 6px;
   display: flex;
   align-items: center;
+  ${({ isHorizontal }) =>
+    !isHorizontal &&
+    css`
+      flex-direction: column;
+      align-items: flex-start;
+    `}
 
   &:not(:last-child) {
     border-bottom: 1px solid ${({ theme }) => theme.backgroundOutline};
   }
-
-  > *:nth-child(1),
-  > *:nth-child(2) {
-    width: 45%;
-    padding: 0 8px;
-  }
 `
 
-const StyledLabel = styled.span`
-  opacity: 0.6;
+const StyledRowHeader = styled.div`
+  display: flex;
+  align-items: center;
+`
+
+const StyledLabel = styled.span<{ isSecondary?: boolean }>`
+  min-width: 50%;
+  color: ${({ theme, isSecondary }) => (isSecondary ? theme.textSecondary : theme.textPrimary)};
 `
 
 const StyledInput = styled.input`
@@ -53,7 +62,7 @@ const StyledInput = styled.input`
   border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.backgroundOutline};
   color: inherit;
-  background-color: ${({ theme }) => theme.accentTextLightPrimary};
+  background-color: ${({ theme }) => theme.backgroundInteractive};
 
   &:disabled {
     border: none;
@@ -61,26 +70,16 @@ const StyledInput = styled.input`
   }
 `
 
-const StyledActionButton = styled.button<{ isSecondary?: boolean; isPrimary?: boolean }>`
+const StyledSaveButton = styled.button`
+  width: 100%;
+  margin-top: 6px;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 8px;
   font-size: inherit;
   border: none;
-  background-color: ${({ isPrimary, isSecondary, theme }) =>
-    isPrimary ? theme.accentAction : isSecondary ? theme.accentActionSoft : 'transparent'};
-`
-
-const StyledInputZone = styled.div`
-  margin: 12px 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-
-  input {
-    width: 49%;
-  }
+  color: ${({ theme }) => theme.white};
+  background-color: ${({ theme }) => theme.accentAction};
 `
 
 const StyledNotice = styled.div<{ isError?: boolean; isWarning?: boolean }>`
@@ -98,69 +97,42 @@ const StyledActionZone = styled.div`
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-
-  button {
-    width: 49%;
-  }
 `
 
 export function TokenBalances() {
   const { chainId, account } = useWeb3React()
+  const nativeCurrency = nativeOnChain(chainId || -1)
   const dispatch = useAppDispatch()
   const activeTokens = useDefaultActiveTokens(chainId)
   const currentNativeBalance = useNativeBalance(chainId)
   const currentBalances = useChainTokenBalances(chainId)
 
-  const [currentError, setCurrentError] = useState('')
   const [nativeBalance, setNativeBalance] = useState(currentNativeBalance?.balance || '')
   const [tokens, setTokens] = useState(
-    Object.values(currentBalances).map(({ addr, decimals, balance }) => ({ addr, decimals, balance }))
+    Object.values(activeTokens).reduce((map, { symbol, address, decimals }) => {
+      map[address] = {
+        symbol,
+        addr: address,
+        decimals,
+        balance: currentBalances[address]?.balance || 0,
+      }
+
+      return map
+    }, {} as { [addr: string]: { symbol?: string; addr: string; decimals: number; balance: number } })
   )
-  const [newAddr, setNewAddr] = useState('')
-  const [newBalance, setNewBalance] = useState('')
 
   const onNativeBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNativeBalance(event.target.value)
   }
 
-  const onAddrChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentError('')
-    setNewAddr(event.target.value)
-  }
-
-  const onBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNewBalance(event.target.value)
-  }
-
-  const onDelete = (dI: number) => {
-    setTokens((curState) => curState.filter((_, i) => i !== dI))
-  }
-
-  const onAdd = () => {
-    if (!newAddr.match(new RegExp(ADDRESS_REGEX))) {
-      return setCurrentError('Invalid address')
-    }
-    if (typeof Number(newBalance) !== 'number') {
-      return setCurrentError('Invalid balance')
-    }
-
-    const activeToken = activeTokens[newAddr]
-
-    if (!activeToken) {
-      return setCurrentError('No such active token')
-    }
-
-    setTokens((curState) => [
+  const onBalanceChange = (addr: string, balance: string) => {
+    setTokens((curState) => ({
       ...curState,
-      {
-        addr: newAddr,
-        balance: Number(newBalance),
-        decimals: activeToken.decimals,
+      [addr]: {
+        ...curState[addr],
+        balance: Number(balance),
       },
-    ])
-    setNewAddr('')
-    setNewBalance('')
-    setCurrentError('')
+    }))
   }
 
   const onSave = () => {
@@ -168,62 +140,39 @@ export function TokenBalances() {
 
     batch(() => {
       dispatch(addNativeBalance({ chainId, balance: Number(nativeBalance) }))
-      dispatch(addTokenBalances({ chainId, tokenBalances: tokens }))
+      dispatch(addTokenBalances({ chainId, tokenBalances: Object.values(tokens) }))
     })
   }
 
   return (
-    <>
-      <ThemedText.SubHeaderSmall color="primary">
-        <Trans>Custom balances</Trans>
-      </ThemedText.SubHeaderSmall>
-
+    <StyledWrapper>
       <StyledLock isLocked={!account}>
-        {!account && <StyledNotice isWarning>First, connect your wallet to set the token balance</StyledNotice>}
+        {!account && <StyledNotice isWarning>First, connect your wallet to set the custom balances</StyledNotice>}
         <StyledTokensList>
-          <StyledTokensListRow>
-            <StyledLabel>Native balance:</StyledLabel>
+          <StyledTokensListRow isHorizontal>
+            <StyledLabel>{nativeCurrency?.symbol || 'Native'}</StyledLabel>
             <StyledInput type="number" value={nativeBalance} onChange={onNativeBalanceChange} />
           </StyledTokensListRow>
 
-          <StyledTokensListRow>
-            <StyledLabel>Address</StyledLabel>
-            <StyledLabel>Balance</StyledLabel>
-            <StyledLabel></StyledLabel>
-          </StyledTokensListRow>
-          {tokens.map(({ addr, balance }: { addr: string; balance?: number }, i) => (
+          {Object.values(tokens).map(({ symbol, addr, balance }) => (
             <StyledTokensListRow key={addr}>
-              <StyledInput type="text" defaultValue={shortenAddress(addr)} disabled />
-              <StyledInput type="number" defaultValue={balance} disabled />
-              <StyledActionButton onClick={() => onDelete(i)}>x</StyledActionButton>
+              <StyledRowHeader>
+                <StyledLabel>{symbol}</StyledLabel>
+                <StyledInput
+                  type="number"
+                  defaultValue={balance}
+                  min={0}
+                  max={Number.MAX_SAFE_INTEGER}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => onBalanceChange(addr, event.target.value)}
+                  required
+                />
+              </StyledRowHeader>
+              <StyledLabel isSecondary>{shortenAddress(addr)}</StyledLabel>
             </StyledTokensListRow>
           ))}
         </StyledTokensList>
-
-        <StyledInputZone>
-          <StyledInput type="text" value={newAddr} onChange={onAddrChange} placeholder="Address" required />
-          <StyledInput
-            type="number"
-            value={newBalance}
-            min={0}
-            max={Number.MAX_SAFE_INTEGER}
-            onChange={onBalanceChange}
-            placeholder="Balance"
-            required
-          />
-        </StyledInputZone>
-
-        {currentError && <StyledNotice isError>{currentError}</StyledNotice>}
-
-        <StyledActionZone>
-          <StyledActionButton onClick={onAdd} isSecondary>
-            Add
-          </StyledActionButton>
-          <StyledActionButton onClick={onSave} isPrimary>
-            Save
-          </StyledActionButton>
-        </StyledActionZone>
+        <StyledSaveButton onClick={onSave}>Save</StyledSaveButton>
       </StyledLock>
-    </>
+    </StyledWrapper>
   )
 }

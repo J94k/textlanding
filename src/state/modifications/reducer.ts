@@ -29,6 +29,7 @@ interface ModificationsState {
         addr: string
         decimals: number
         balance: number
+        weiBalance: string
         BNBalance: string
         JSBIBalance: JSBI
       }
@@ -92,12 +93,13 @@ export default createReducer(initialState, (builder) =>
       const newBalances: ModificationsState['tokenBalances'][typeof chainId] = {}
 
       tokenBalances.forEach(({ addr, decimals, balance }) => {
-        const { BNBalance, JSBIBalance } = getBalanceFormats(balance, decimals)
+        const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(balance, decimals)
 
         newBalances[addr] = {
           addr,
           decimals,
           balance,
+          weiBalance,
           BNBalance,
           JSBIBalance,
         }
@@ -106,7 +108,7 @@ export default createReducer(initialState, (builder) =>
       state.tokenBalances[chainId] = newBalances
     })
     .addCase(addTokenBalance, (state, { payload: { chainId, addr, decimals, balance } }) => {
-      const { BNBalance, JSBIBalance } = getBalanceFormats(balance, decimals)
+      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(balance, decimals)
 
       if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
 
@@ -114,6 +116,7 @@ export default createReducer(initialState, (builder) =>
         addr,
         decimals,
         balance,
+        weiBalance,
         BNBalance,
         JSBIBalance,
       }
@@ -123,12 +126,13 @@ export default createReducer(initialState, (builder) =>
 
       const oldBalance = state.tokenBalances[chainId]?.[addr].balance || 0
       const newBalance = oldBalance + amountToAdd
-      const { BNBalance, JSBIBalance } = getBalanceFormats(newBalance, decimals)
+      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, decimals)
 
       state.tokenBalances[chainId][addr] = {
         addr,
         decimals,
         balance: newBalance,
+        weiBalance,
         BNBalance,
         JSBIBalance,
       }
@@ -142,12 +146,13 @@ export default createReducer(initialState, (builder) =>
         let newBalance = oldBalance - amountToRemove
         newBalance = newBalance < 0 ? 0 : newBalance
 
-        const { BNBalance, JSBIBalance } = getBalanceFormats(newBalance, decimals)
+        const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, decimals)
 
         state.tokenBalances[chainId][addr] = {
           addr,
           decimals,
           balance: newBalance,
+          weiBalance,
           BNBalance,
           JSBIBalance,
         }

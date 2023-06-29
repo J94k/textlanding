@@ -91,8 +91,8 @@ export function useTokenBalancesWithLoadingIndicator(
         ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
             const customData = customTokenBalances[token.address]
 
-            if (customData?.JSBIBalance) {
-              memo[token.address] = CurrencyAmount.fromRawAmount(token, customData.JSBIBalance)
+            if (customData?.weiBalance) {
+              memo[token.address] = CurrencyAmount.fromRawAmount(token, customData.weiBalance)
             } else {
               const value = balances?.[i]?.result?.[0]
               const amount = value ? JSBI.BigInt(value.toString()) : undefined
