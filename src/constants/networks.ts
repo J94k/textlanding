@@ -9,6 +9,8 @@ if (typeof QUICKNODE_RPC_URL === 'undefined') {
   throw new Error(`REACT_APP_BNB_RPC_URL must be a defined environment variable`)
 }
 
+const BNB_OPEN_RPC = ' https://bsc-dataseed.binance.org'
+
 /**
  * Fallback JSON-RPC endpoints.
  * These are used if the integrator does not provide an endpoint, or if the endpoint does not work.
@@ -154,5 +156,5 @@ export const RPC_URLS = {
   ],
   [SupportedChainId.CELO]: FALLBACK_URLS[SupportedChainId.CELO],
   [SupportedChainId.CELO_ALFAJORES]: FALLBACK_URLS[SupportedChainId.CELO_ALFAJORES],
-  [SupportedChainId.BNB]: [QUICKNODE_RPC_URL, ...FALLBACK_URLS[SupportedChainId.BNB]],
+  [SupportedChainId.BNB]: [BNB_OPEN_RPC, QUICKNODE_RPC_URL, ...FALLBACK_URLS[SupportedChainId.BNB]],
 }
