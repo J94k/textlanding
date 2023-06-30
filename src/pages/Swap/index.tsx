@@ -27,6 +27,7 @@ import usePermit2Allowance, { AllowanceState } from 'hooks/usePermit2Allowance'
 import usePrevious from 'hooks/usePrevious'
 import { useSwapCallback } from 'hooks/useSwapCallback'
 import { useFakeSwapCallback } from 'hooks/useFakeSwapCallback'
+import { useFakeWrapCallback } from 'hooks/useFakeWrapCallback'
 import { useSwitchChain } from 'hooks/useSwitchChain'
 import { useUSDPrice } from 'hooks/useUSDPrice'
 import JSBI from 'jsbi'
@@ -389,6 +390,11 @@ export function Swap({
   }, [fiatValueTradeInput, fiatValueTradeOutput])
 
   const { callback: fakeSwapCallback } = useFakeSwapCallback(trade, allowedSlippage)
+  const { callback: fakeWrapCallback } = useFakeWrapCallback(
+    currencies[Field.INPUT],
+    currencies[Field.OUTPUT],
+    typedValue
+  )
 
   // the callback to execute the swap
   const { callback: swapCallback } = useSwapCallback(
@@ -407,8 +413,33 @@ export function Swap({
     })
   }, [trade])
 
+  const handleWrap = useCallback(() => {
+    if (!fakeWrapCallback) return
+
+    setSwapState((currentState) => ({
+      ...currentState,
+      swapError: undefined,
+      txHash: undefined,
+    }))
+    fakeWrapCallback()
+      .then((hash) => {
+        setSwapState((currentState) => ({
+          ...currentState,
+          swapError: undefined,
+          txHash: hash,
+        }))
+      })
+      .catch((error) => {
+        setSwapState((currentState) => ({
+          ...currentState,
+          swapError: error,
+          txHash: undefined,
+        }))
+      })
+  }, [fakeWrapCallback])
+
   const handleSwap = useCallback(() => {
-    if (!swapCallback || !fakeSwapCallback) {
+    if (!fakeSwapCallback) {
       return
     }
     if (stablecoinPriceImpact && !confirmPriceImpactWithoutFee(stablecoinPriceImpact)) {
@@ -473,7 +504,7 @@ export function Swap({
     //     }))
     //   })
   }, [
-    swapCallback,
+    // swapCallback,
     fakeSwapCallback,
     stablecoinPriceImpact,
     // recipient,
@@ -489,9 +520,11 @@ export function Swap({
 
   // warnings on the greater of fiat value price impact and execution price impact
   const { priceImpactSeverity, largerPriceImpact } = useMemo(() => {
-    const marketPriceImpact = trade?.priceImpact ? computeRealizedPriceImpact(trade) : undefined
-    const largerPriceImpact = largerPercentValue(marketPriceImpact, stablecoinPriceImpact)
-    return { priceImpactSeverity: warningSeverity(largerPriceImpact), largerPriceImpact }
+    return { priceImpactSeverity: 0, largerPriceImpact: undefined }
+
+    // const marketPriceImpact = trade?.priceImpact ? computeRealizedPriceImpact(trade) : undefined
+    // const largerPriceImpact = largerPercentValue(marketPriceImpact, stablecoinPriceImpact)
+    // return { priceImpactSeverity: warningSeverity(largerPriceImpact), largerPriceImpact }
   }, [stablecoinPriceImpact, trade])
 
   const handleConfirmDismiss = useCallback(() => {
@@ -728,7 +761,8 @@ export function Swap({
           ) : showWrap ? (
             <ButtonPrimary
               disabled={Boolean(wrapInputError)}
-              onClick={onWrap}
+              onClick={handleWrap}
+              // onClick={onWrap}
               fontWeight={600}
               data-testid="wrap-button"
             >

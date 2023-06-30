@@ -2,8 +2,8 @@ import 'components/analytics'
 
 import * as Sentry from '@sentry/react'
 import { BrowserTracing } from '@sentry/tracing'
-import { initializeAnalytics, OriginApplication } from '@uniswap/analytics'
-import { SharedEventName } from '@uniswap/analytics-events'
+// import { initializeAnalytics, OriginApplication } from '@uniswap/analytics'
+// import { SharedEventName } from '@uniswap/analytics-events'
 import { isSentryEnabled } from 'utils/env'
 import { getEnvName, isProductionEnv } from 'utils/env'
 
@@ -31,9 +31,9 @@ Sentry.init({
   beforeSend,
 })
 
-initializeAnalytics(AMPLITUDE_DUMMY_KEY, OriginApplication.INTERFACE, {
-  proxyUrl: process.env.REACT_APP_AMPLITUDE_PROXY_URL,
-  defaultEventName: SharedEventName.PAGE_VIEWED,
-  commitHash: process.env.REACT_APP_GIT_COMMIT_HASH,
-  isProductionEnv: isProductionEnv(),
-})
+// initializeAnalytics(AMPLITUDE_DUMMY_KEY, OriginApplication.INTERFACE, {
+//   proxyUrl: process.env.REACT_APP_AMPLITUDE_PROXY_URL,
+//   defaultEventName: SharedEventName.PAGE_VIEWED,
+//   commitHash: process.env.REACT_APP_GIT_COMMIT_HASH,
+//   isProductionEnv: isProductionEnv(),
+// })

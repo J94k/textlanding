@@ -82,14 +82,13 @@ const StyledSaveButton = styled.button`
   background-color: ${({ theme }) => theme.accentAction};
 `
 
-const StyledNotice = styled.div<{ isError?: boolean; isWarning?: boolean }>`
+const StyledNotice = styled.div<{ isWarning?: boolean }>`
   margin: 12px 0;
   padding: 8px;
   border-radius: 8px;
   font-weight: 600;
-  background-color: ${({ theme, isError, isWarning }) =>
-    isError ? theme.accentFailure : isWarning ? theme.accentWarning : theme.accentSuccessSoft};
-  color: ${({ theme }) => theme.white};
+  background-color: ${({ theme, isWarning }) => (isWarning ? theme.accentWarningSoft : theme.accentSuccessSoft)};
+  color: ${({ theme, isWarning }) => (isWarning ? theme.accentWarning : theme.white)};
 `
 
 const StyledActionZone = styled.div`
@@ -146,8 +145,8 @@ export function TokenBalances() {
 
   return (
     <StyledWrapper>
+      {!account && <StyledNotice isWarning>First, connect your wallet to set the custom balances</StyledNotice>}
       <StyledLock isLocked={!account}>
-        {!account && <StyledNotice isWarning>First, connect your wallet to set the custom balances</StyledNotice>}
         <StyledTokensList>
           <StyledTokensListRow isHorizontal>
             <StyledLabel>{nativeCurrency?.symbol || 'Native'}</StyledLabel>

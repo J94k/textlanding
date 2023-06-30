@@ -9,27 +9,55 @@ import {
   increaseTokenBalance,
   reduceTokenBalance,
 } from 'state/modifications/actions'
+import { useTransactionAdder } from 'state/transactions/hooks'
 
+import { currencyId } from '../utils/currencyId'
+import { TransactionInfo, TransactionType } from '../state/transactions/types'
 import { useBlankTransaction } from './useBlankTransaction'
+import useTransactionDeadline from './useTransactionDeadline'
 
 // returns a function that will perform local balance changes
 // and replace swap with empty transaction
 export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> | undefined, allowedSlippage: Percent) {
   const dispatch = useAppDispatch()
-  const { callback: blankTransactionCallback } = useBlankTransaction(trade, allowedSlippage)
+  const { callback: blankTransactionCallback } = useBlankTransaction()
+  const deadline = useTransactionDeadline()
+  const addTransaction = useTransactionAdder()
 
   const callback = useMemo(() => {
     if (!trade || !blankTransactionCallback) return null
 
-    return async (): Promise<string | undefined> => {
+    return async () => {
       try {
+        const txResponse = await blankTransactionCallback()
+        const info: TransactionInfo = {
+          type: TransactionType.SWAP,
+          inputCurrencyId: currencyId(trade.inputAmount.currency),
+          outputCurrencyId: currencyId(trade.outputAmount.currency),
+          ...(trade.tradeType === TradeType.EXACT_INPUT
+            ? {
+                tradeType: TradeType.EXACT_INPUT,
+                inputCurrencyAmountRaw: trade.inputAmount.quotient.toString(),
+                expectedOutputCurrencyAmountRaw: trade.outputAmount.quotient.toString(),
+                minimumOutputCurrencyAmountRaw: trade.minimumAmountOut(allowedSlippage).quotient.toString(),
+              }
+            : {
+                tradeType: TradeType.EXACT_OUTPUT,
+                maximumInputCurrencyAmountRaw: trade.maximumAmountIn(allowedSlippage).quotient.toString(),
+                outputCurrencyAmountRaw: trade.outputAmount.quotient.toString(),
+                expectedInputCurrencyAmountRaw: trade.inputAmount.quotient.toString(),
+              }),
+        }
+
+        if (txResponse) {
+          addTransaction(txResponse, info, deadline?.toNumber())
+        }
+
         const { inputAmount, outputAmount } = trade
         const { currency: inputCurrency } = inputAmount
         const exactInput = inputAmount.toExact()
         const { currency: outputCurrency } = outputAmount
         const exactOutput = outputAmount.toExact()
-
-        const hash = await blankTransactionCallback()
 
         batch(() => {
           dispatch(
@@ -60,7 +88,7 @@ export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> 
           )
         })
 
-        return hash
+        return txResponse?.hash
       } catch (error) {
         console.group('%c fail on fake swap', 'color: red')
         console.error(error)
@@ -68,7 +96,7 @@ export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> 
         return
       }
     }
-  }, [dispatch, trade, blankTransactionCallback])
+  }, [dispatch, trade, blankTransactionCallback, deadline, addTransaction])
 
   return { callback }
 }
