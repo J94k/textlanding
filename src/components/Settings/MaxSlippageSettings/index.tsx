@@ -96,7 +96,7 @@ export default function MaxSlippageSettings({ autoSlippage }: { autoSlippage: Pe
   return (
     <Expand
       testId="max-slippage-settings"
-      isOpen={isOpen}
+      isOpen={false}
       isIconVisible={false}
       isPossibleToOpen={false}
       onToggle={() => setIsOpen(!isOpen)}

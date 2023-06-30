@@ -24,8 +24,12 @@ export const PLASMA_BNB_LIST = 'https://raw.githubusercontent.com/plasmadlt/plas
 
 export const UNSUPPORTED_LIST_URLS: string[] = [BA_LIST, UNI_UNSUPPORTED_LIST]
 
+export const NE_POLYGON_MUMBAI =
+  'https://raw.githubusercontent.com/NotEternal/CodeBase/main/src/blockchain/toke-lists/80001.json'
+
 // default lists to be 'active' aka searched across
 export const DEFAULT_ACTIVE_LIST_URLS: string[] = [
+  NE_POLYGON_MUMBAI,
   UNI_LIST,
   COINGECKO_LIST,
   COINGECKO_BNB_LIST,

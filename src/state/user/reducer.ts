@@ -67,7 +67,7 @@ export const initialState: UserState = {
   userRouterPreference: RouterPreference.AUTO,
   userHideClosedPositions: false,
   // Set slippage to 0.5%
-  userSlippageTolerance: JSBI.toNumber(new Percent(5, 10_000).multiply(10_000).quotient), // SlippageTolerance.Auto,
+  userSlippageTolerance: JSBI.toNumber(new Percent(50, 10_000).multiply(10_000).quotient), // SlippageTolerance.Auto,
   userSlippageToleranceHasBeenMigratedToAuto: true,
   userDeadline: DEFAULT_DEADLINE_FROM_NOW,
   tokens: {},

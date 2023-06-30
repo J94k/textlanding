@@ -108,36 +108,48 @@ export const FALLBACK_URLS = {
  */
 export const RPC_URLS = {
   [SupportedChainId.MAINNET]: [
-    `https://mainnet.infura.io/v3/${INFURA_KEY}`,
+    'https://eth.llamarpc.com',
+    // `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.MAINNET],
   ],
-  [SupportedChainId.GOERLI]: [`https://goerli.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[SupportedChainId.GOERLI]],
+  [SupportedChainId.GOERLI]: [
+    'https://ethereum-goerli.publicnode.com',
+    // `https://goerli.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[SupportedChainId.GOERLI],
+  ],
   [SupportedChainId.SEPOLIA]: [
-    `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+    'https://api.sepolia.kroma.network',
+    // `https://sepolia.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.SEPOLIA],
   ],
   [SupportedChainId.OPTIMISM]: [
-    `https://optimism-mainnet.infura.io/v3/${INFURA_KEY}`,
+    'https://optimism.publicnode.com',
+    // `https://optimism-mainnet.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.OPTIMISM],
   ],
   [SupportedChainId.OPTIMISM_GOERLI]: [
-    `https://optimism-goerli.infura.io/v3/${INFURA_KEY}`,
+    'https://optimism-goerli.publicnode.com',
+    // `https://optimism-goerli.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.OPTIMISM_GOERLI],
   ],
   [SupportedChainId.ARBITRUM_ONE]: [
-    `https://arbitrum-mainnet.infura.io/v3/${INFURA_KEY}`,
+    'https://arb1.croswap.com/rpc',
+    // `https://arbitrum-mainnet.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.ARBITRUM_ONE],
   ],
   [SupportedChainId.ARBITRUM_GOERLI]: [
-    `https://arbitrum-goerli.infura.io/v3/${INFURA_KEY}`,
+    'https://arbitrum-goerli.public.blastapi.io',
+    // `https://arbitrum-goerli.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.ARBITRUM_GOERLI],
   ],
   [SupportedChainId.POLYGON]: [
-    `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
+    'https://polygon.llamarpc.com',
+    // `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.POLYGON],
   ],
   [SupportedChainId.POLYGON_MUMBAI]: [
-    `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
+    'https://polygon-mumbai-bor.publicnode.com',
+    // `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[SupportedChainId.POLYGON_MUMBAI],
   ],
   [SupportedChainId.CELO]: FALLBACK_URLS[SupportedChainId.CELO],
