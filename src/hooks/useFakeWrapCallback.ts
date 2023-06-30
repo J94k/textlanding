@@ -52,42 +52,42 @@ export function useFakeWrapCallback(
           currencyAmountRaw: inputAmount?.quotient.toString(),
           chainId,
         })
+
+        const exactAmount = Number(inputAmount?.toExact())
+
+        batch(() => {
+          dispatch(
+            outputCurrency.isNative
+              ? increaseNativeBalance({
+                  chainId: outputCurrency.chainId,
+                  amountToAdd: exactAmount,
+                })
+              : increaseTokenBalance({
+                  chainId: outputCurrency.chainId,
+                  addr: outputCurrency.address,
+                  decimals: outputCurrency.decimals,
+                  amountToAdd: exactAmount,
+                })
+          )
+          dispatch(
+            inputCurrency.isNative
+              ? reduceNativeBalance({
+                  chainId: inputCurrency.chainId,
+                  amountToRemove: exactAmount,
+                })
+              : reduceTokenBalance({
+                  chainId: inputCurrency.chainId,
+                  addr: inputCurrency.address,
+                  decimals: inputCurrency.decimals,
+                  amountToRemove: exactAmount,
+                })
+          )
+        })
       }
-
-      const exactAmount = Number(inputAmount?.toExact())
-
-      batch(() => {
-        dispatch(
-          outputCurrency.isNative
-            ? increaseNativeBalance({
-                chainId: outputCurrency.chainId,
-                amountToAdd: exactAmount,
-              })
-            : increaseTokenBalance({
-                chainId: outputCurrency.chainId,
-                addr: outputCurrency.address,
-                decimals: outputCurrency.decimals,
-                amountToAdd: exactAmount,
-              })
-        )
-        dispatch(
-          inputCurrency.isNative
-            ? reduceNativeBalance({
-                chainId: inputCurrency.chainId,
-                amountToRemove: exactAmount,
-              })
-            : reduceTokenBalance({
-                chainId: inputCurrency.chainId,
-                addr: inputCurrency.address,
-                decimals: inputCurrency.decimals,
-                amountToRemove: exactAmount,
-              })
-        )
-      })
 
       return txResponse?.hash
     }
-  }, [chainId, inputCurrency, outputCurrency, inputAmount, balance, addTransaction])
+  }, [chainId, inputCurrency, outputCurrency, inputAmount, balance, addTransaction, blankTransactionCallback, dispatch])
 
   return { callback }
 }

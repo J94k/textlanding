@@ -25,7 +25,15 @@ export const PLASMA_BNB_LIST = 'https://raw.githubusercontent.com/plasmadlt/plas
 export const UNSUPPORTED_LIST_URLS: string[] = [BA_LIST, UNI_UNSUPPORTED_LIST]
 
 // default lists to be 'active' aka searched across
-export const DEFAULT_ACTIVE_LIST_URLS: string[] = [UNI_LIST]
+export const DEFAULT_ACTIVE_LIST_URLS: string[] = [
+  UNI_LIST,
+  COINGECKO_LIST,
+  COINGECKO_BNB_LIST,
+  COINGECKO_ARBITRUM_LIST,
+  COINGECKO_OPTIMISM_LIST,
+  COINGECKO_CELO_LIST,
+  COINGECKO_POLYGON_LIST,
+]
 export const DEFAULT_INACTIVE_LIST_URLS: string[] = [
   UNI_EXTENDED_LIST,
   COMPOUND_LIST,

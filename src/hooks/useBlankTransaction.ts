@@ -15,19 +15,12 @@ export function useBlankTransaction() {
     }
 
     return async () => {
-      try {
-        const response = await provider
-          .getSigner()
-          .sendTransaction({ ...tx })
-          .then((response) => response)
+      const response = await provider
+        .getSigner()
+        .sendTransaction({ ...tx })
+        .then((response) => response)
 
-        return response
-      } catch (error) {
-        console.group('%c fail on blank tx', 'color: red')
-        console.error(error)
-        console.groupEnd()
-        return
-      }
+      return response
     }
   }, [account, chainId, provider])
 
