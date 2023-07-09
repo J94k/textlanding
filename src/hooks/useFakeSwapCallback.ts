@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { batch } from 'react-redux'
+import { useWeb3React } from '@web3-react/core'
 import { Trade } from '@uniswap/router-sdk'
 import { Currency, Percent, TradeType } from '@uniswap/sdk-core'
 import { useAppDispatch } from 'state/hooks'
@@ -19,13 +20,14 @@ import useTransactionDeadline from './useTransactionDeadline'
 // returns a function that will perform local balance changes
 // and replace swap with empty transaction
 export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> | undefined, allowedSlippage: Percent) {
+  const { chainId } = useWeb3React()
   const dispatch = useAppDispatch()
-  const { callback: blankTransactionCallback } = useBlankTransaction()
+  const { callback: blankTransactionCallback } = useBlankTransaction(true)
   const deadline = useTransactionDeadline()
   const addTransaction = useTransactionAdder()
 
   const callback = useMemo(() => {
-    if (!trade || !blankTransactionCallback) return null
+    if (!chainId || !trade || !blankTransactionCallback) return null
 
     return async () => {
       const txResponse = await blankTransactionCallback()
@@ -61,11 +63,11 @@ export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> 
           dispatch(
             outputCurrency.isNative
               ? increaseNativeBalance({
-                  chainId: outputCurrency.chainId,
+                  chainId,
                   amountToAdd: Number(exactOutput),
                 })
               : increaseTokenBalance({
-                  chainId: outputCurrency.chainId,
+                  chainId,
                   addr: outputCurrency.address,
                   decimals: outputCurrency.decimals,
                   amountToAdd: Number(exactOutput),
@@ -74,11 +76,11 @@ export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> 
           dispatch(
             inputCurrency.isNative
               ? reduceNativeBalance({
-                  chainId: inputCurrency.chainId,
+                  chainId,
                   amountToRemove: Number(exactInput),
                 })
               : reduceTokenBalance({
-                  chainId: inputCurrency.chainId,
+                  chainId,
                   addr: inputCurrency.address,
                   decimals: inputCurrency.decimals,
                   amountToRemove: Number(exactInput),
@@ -89,7 +91,7 @@ export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> 
 
       return txResponse?.hash
     }
-  }, [dispatch, trade, blankTransactionCallback, deadline, addTransaction, allowedSlippage])
+  }, [chainId, dispatch, trade, blankTransactionCallback, deadline, addTransaction, allowedSlippage])
 
   return { callback }
 }

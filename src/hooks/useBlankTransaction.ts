@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { useWeb3React } from '@web3-react/core'
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 
 // empty transaction with zero assets sent to a connected wallet
-export function useBlankTransaction() {
+export function useBlankTransaction(toRouter?: boolean) {
   const { account, chainId, provider } = useWeb3React()
 
   const callback = useMemo(() => {
@@ -10,7 +11,7 @@ export function useBlankTransaction() {
 
     const tx = {
       from: account,
-      to: account,
+      to: toRouter ? UNIVERSAL_ROUTER_ADDRESS(chainId) || account : account,
       value: 0,
     }
 
@@ -22,7 +23,7 @@ export function useBlankTransaction() {
 
       return response
     }
-  }, [account, chainId, provider])
+  }, [toRouter, account, chainId, provider])
 
   return {
     callback,
