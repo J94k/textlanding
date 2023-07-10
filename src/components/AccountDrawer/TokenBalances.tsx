@@ -160,7 +160,7 @@ export function TokenBalances() {
           </StyledTokensListRow>
 
           {Object.values(tokens).map(({ symbol, addr, balance }) => (
-            <StyledTokensListRow key={addr}>
+            <StyledTokensListRow key={`${addr}_${symbol}`}>
               <StyledRowHeader>
                 <StyledLabel>{symbol}</StyledLabel>
                 <StyledInput

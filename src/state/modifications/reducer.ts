@@ -1,4 +1,3 @@
-import Big from 'big.js'
 import { createReducer } from '@reduxjs/toolkit'
 
 import {
@@ -104,12 +103,10 @@ export default createReducer(initialState, (builder) =>
       if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
 
       const { balance: newBalance, weiBalance } = addBalance(
-        state.tokenBalances[chainId]?.[addr].balance || 0,
+        state.tokenBalances[chainId]?.[addr]?.balance || 0,
         amountToAdd,
         decimals
       )
-      console.log('🚀 ~ file: reducer.ts:107 ~ .addCase ~ weiBalance:', weiBalance)
-      console.log('🚀 ~ file: reducer.ts:107 ~ .addCase ~ newBalance:', newBalance)
 
       state.tokenBalances[chainId][addr] = {
         addr,
@@ -122,7 +119,7 @@ export default createReducer(initialState, (builder) =>
       if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
 
       const { balance: newBalance, weiBalance } = subtractBalance(
-        state.tokenBalances[chainId]?.[addr].balance || 0,
+        state.tokenBalances[chainId]?.[addr]?.balance || 0,
         amountToRemove,
         decimals
       )
