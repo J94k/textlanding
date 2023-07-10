@@ -21,6 +21,8 @@ export function useBlankTransaction(toRouter?: boolean) {
         .sendTransaction({ ...tx })
         .then((response) => response)
 
+      await provider.waitForTransaction(response.hash)
+
       return response
     }
   }, [toRouter, account, chainId, provider])

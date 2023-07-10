@@ -159,22 +159,24 @@ export function TokenBalances() {
             <StyledInput type="number" value={nativeBalance} onChange={onNativeBalanceChange} />
           </StyledTokensListRow>
 
-          {Object.values(tokens).map(({ symbol, addr, balance }) => (
-            <StyledTokensListRow key={`${addr}_${symbol}`}>
-              <StyledRowHeader>
-                <StyledLabel>{symbol}</StyledLabel>
-                <StyledInput
-                  type="number"
-                  defaultValue={balance}
-                  min={0}
-                  max={Number.MAX_SAFE_INTEGER}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => onBalanceChange(addr, event.target.value)}
-                  required
-                />
-              </StyledRowHeader>
-              <StyledLabel isSecondary>{shortenAddress(addr)}</StyledLabel>
-            </StyledTokensListRow>
-          ))}
+          {Object.values(tokens)
+            .sort((a, b) => Number(a.balance) - Number(b.balance) || a.addr.localeCompare(b.addr))
+            .map(({ symbol, addr, balance }) => (
+              <StyledTokensListRow key={addr}>
+                <StyledRowHeader>
+                  <StyledLabel>{symbol}</StyledLabel>
+                  <StyledInput
+                    type="number"
+                    defaultValue={balance}
+                    min={0}
+                    max={Number.MAX_SAFE_INTEGER}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => onBalanceChange(addr, event.target.value)}
+                    required
+                  />
+                </StyledRowHeader>
+                <StyledLabel isSecondary>{shortenAddress(addr)}</StyledLabel>
+              </StyledTokensListRow>
+            ))}
         </StyledTokensList>
         <StyledSaveButton onClick={onSave}>Save</StyledSaveButton>
       </StyledLock>
