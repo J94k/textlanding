@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 
-// empty transaction with zero assets sent to a connected wallet
+// empty transaction with zero assets
 export function useBlankTransaction(toRouter?: boolean) {
   const { account, chainId, provider } = useWeb3React()
 

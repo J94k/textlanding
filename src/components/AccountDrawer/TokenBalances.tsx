@@ -91,13 +91,6 @@ const StyledNotice = styled.div<{ isWarning?: boolean }>`
   color: ${({ theme, isWarning }) => (isWarning ? theme.accentWarning : theme.white)};
 `
 
-const StyledActionZone = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-`
-
 export function TokenBalances() {
   const { chainId, account } = useWeb3React()
   const nativeCurrency = nativeOnChain(chainId || -1)
@@ -113,11 +106,11 @@ export function TokenBalances() {
         symbol,
         addr: address,
         decimals,
-        balance: currentBalances[address]?.balance || 0,
+        balance: currentBalances[address]?.balance || '0',
       }
 
       return map
-    }, {} as { [addr: string]: { symbol?: string; addr: string; decimals: number; balance: number } })
+    }, {} as { [addr: string]: { symbol?: string; addr: string; decimals: number; balance: string } })
   )
 
   const onNativeBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,11 +118,24 @@ export function TokenBalances() {
   }
 
   const onBalanceChange = (addr: string, balance: string) => {
+    const { decimals } = tokens[addr]
+    let b = balance.replace(',', '.')
+
+    if (Number(b) % 1 !== 0) {
+      const decimalIndex = b.indexOf('.')
+
+      if (decimalIndex !== -1) {
+        const enteredDecimals = b.length - decimalIndex - 1
+
+        if (enteredDecimals > decimals) return
+      }
+    }
+
     setTokens((curState) => ({
       ...curState,
       [addr]: {
         ...curState[addr],
-        balance: Number(balance),
+        balance: b,
       },
     }))
   }
@@ -138,7 +144,7 @@ export function TokenBalances() {
     if (!chainId) return
 
     batch(() => {
-      dispatch(addNativeBalance({ chainId, balance: Number(nativeBalance) }))
+      dispatch(addNativeBalance({ chainId, balance: nativeBalance }))
       dispatch(addTokenBalances({ chainId, tokenBalances: Object.values(tokens) }))
     })
   }

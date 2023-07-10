@@ -31,7 +31,7 @@ export function useFakeWrapCallback(
 ) {
   const { chainId, account } = useWeb3React()
   const dispatch = useAppDispatch()
-  const { callback: blankTransactionCallback } = useBlankTransaction()
+  const { callback: blankTransactionCallback } = useBlankTransaction(true)
   const balance = useCurrencyBalance(account ?? undefined, inputCurrency ?? undefined)
   const inputAmount = useMemo(
     () => tryParseCurrencyAmount(typedValue, inputCurrency ?? undefined),
@@ -40,7 +40,7 @@ export function useFakeWrapCallback(
   const addTransaction = useTransactionAdder()
 
   const callback = useMemo(() => {
-    if (!inputCurrency || !outputCurrency || !blankTransactionCallback || !inputAmount) return null
+    if (!chainId || !inputCurrency || !outputCurrency || !blankTransactionCallback || !inputAmount) return null
 
     return async () => {
       const txResponse = await blankTransactionCallback()
@@ -53,17 +53,17 @@ export function useFakeWrapCallback(
           chainId,
         })
 
-        const exactAmount = Number(inputAmount?.toExact())
+        const exactAmount = inputAmount?.toExact()
 
         batch(() => {
           dispatch(
             outputCurrency.isNative
               ? increaseNativeBalance({
-                  chainId: outputCurrency.chainId,
+                  chainId,
                   amountToAdd: exactAmount,
                 })
               : increaseTokenBalance({
-                  chainId: outputCurrency.chainId,
+                  chainId,
                   addr: outputCurrency.address,
                   decimals: outputCurrency.decimals,
                   amountToAdd: exactAmount,
@@ -72,11 +72,11 @@ export function useFakeWrapCallback(
           dispatch(
             inputCurrency.isNative
               ? reduceNativeBalance({
-                  chainId: inputCurrency.chainId,
+                  chainId,
                   amountToRemove: exactAmount,
                 })
               : reduceTokenBalance({
-                  chainId: inputCurrency.chainId,
+                  chainId,
                   addr: inputCurrency.address,
                   decimals: inputCurrency.decimals,
                   amountToRemove: exactAmount,

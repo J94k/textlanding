@@ -1,5 +1,4 @@
-import { BigNumber } from 'ethers'
-import JSBI from 'jsbi'
+import Big from 'big.js'
 import { createReducer } from '@reduxjs/toolkit'
 
 import {
@@ -11,16 +10,15 @@ import {
   increaseTokenBalance,
   reduceTokenBalance,
 } from './actions'
+import { getBalanceFormats, addBalance, subtractBalance } from './utils'
 
 const NATIVE_CURRENCY_DECIMALS = 18
 
 interface ModificationsState {
   readonly nativeBalances: {
     [chainId: number]: {
-      balance: number
+      balance: string
       weiBalance: string
-      BNBalance: string
-      JSBIBalance: JSBI
     }
   }
   readonly tokenBalances: {
@@ -28,10 +26,8 @@ interface ModificationsState {
       [addr: string]: {
         addr: string
         decimals: number
-        balance: number
+        balance: string
         weiBalance: string
-        BNBalance: string
-        JSBIBalance: JSBI
       }
     }
   }
@@ -42,120 +38,100 @@ const initialState: ModificationsState = {
   tokenBalances: {},
 }
 
-const getBalanceFormats = (balance: number, decimals: number) => {
-  const JSBIBalance = JSBI.BigInt(balance * 10 ** decimals)
-  const weiBalance = JSBIBalance.toString()
-  const BNBalance = BigNumber.from(weiBalance).toString()
-
-  return {
-    weiBalance,
-    BNBalance,
-    JSBIBalance,
-  }
-}
-
 export default createReducer(initialState, (builder) =>
   builder
     .addCase(addNativeBalance, (state, { payload: { chainId, balance } }) => {
-      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(balance, NATIVE_CURRENCY_DECIMALS)
+      const { balance: newBalance, weiBalance } = getBalanceFormats(balance, NATIVE_CURRENCY_DECIMALS)
 
       state.nativeBalances[chainId] = {
+        balance: newBalance,
         weiBalance,
-        balance,
-        BNBalance,
-        JSBIBalance,
       }
     })
     .addCase(increaseNativeBalance, (state, { payload: { chainId, amountToAdd } }) => {
-      const newBalance = (state.nativeBalances[chainId]?.balance || 0) + amountToAdd
-      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, NATIVE_CURRENCY_DECIMALS)
+      const { balance: newBalance, weiBalance } = addBalance(
+        state.nativeBalances[chainId]?.balance || 0,
+        amountToAdd,
+        NATIVE_CURRENCY_DECIMALS
+      )
 
       state.nativeBalances[chainId] = {
         balance: newBalance,
         weiBalance,
-        BNBalance,
-        JSBIBalance,
       }
     })
     .addCase(reduceNativeBalance, (state, { payload: { chainId, amountToRemove } }) => {
-      let newBalance = (state.nativeBalances[chainId]?.balance || 0) - amountToRemove
-      newBalance = newBalance > 0 ? newBalance : 0
-      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, NATIVE_CURRENCY_DECIMALS)
+      const { balance: newBalance, weiBalance } = subtractBalance(
+        state.nativeBalances[chainId]?.balance || 0,
+        amountToRemove,
+        NATIVE_CURRENCY_DECIMALS
+      )
 
       state.nativeBalances[chainId] = {
         balance: newBalance,
         weiBalance,
-        BNBalance,
-        JSBIBalance,
       }
     })
     .addCase(addTokenBalances, (state, { payload: { chainId, tokenBalances } }) => {
       const newBalances: ModificationsState['tokenBalances'][typeof chainId] = {}
 
       tokenBalances.forEach(({ addr, decimals, balance }) => {
-        const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(balance, decimals)
+        const { balance: newBalance, weiBalance } = getBalanceFormats(balance, decimals)
 
         newBalances[addr] = {
           addr,
           decimals,
-          balance,
+          balance: newBalance,
           weiBalance,
-          BNBalance,
-          JSBIBalance,
         }
       })
 
       state.tokenBalances[chainId] = newBalances
     })
     .addCase(addTokenBalance, (state, { payload: { chainId, addr, decimals, balance } }) => {
-      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(balance, decimals)
-
       if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
 
-      state.tokenBalances[chainId][addr] = {
-        addr,
-        decimals,
-        balance,
-        weiBalance,
-        BNBalance,
-        JSBIBalance,
-      }
-    })
-    .addCase(increaseTokenBalance, (state, { payload: { chainId, addr, decimals, amountToAdd } }) => {
-      if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
-
-      const oldBalance = state.tokenBalances[chainId]?.[addr].balance || 0
-      const newBalance = oldBalance + amountToAdd
-      const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, decimals)
+      const { balance: newBalance, weiBalance } = getBalanceFormats(balance, decimals)
 
       state.tokenBalances[chainId][addr] = {
         addr,
         decimals,
         balance: newBalance,
         weiBalance,
-        BNBalance,
-        JSBIBalance,
+      }
+    })
+    .addCase(increaseTokenBalance, (state, { payload: { chainId, addr, decimals, amountToAdd } }) => {
+      if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
+
+      const { balance: newBalance, weiBalance } = addBalance(
+        state.tokenBalances[chainId]?.[addr].balance || 0,
+        amountToAdd,
+        decimals
+      )
+      console.log('🚀 ~ file: reducer.ts:107 ~ .addCase ~ weiBalance:', weiBalance)
+      console.log('🚀 ~ file: reducer.ts:107 ~ .addCase ~ newBalance:', newBalance)
+
+      state.tokenBalances[chainId][addr] = {
+        addr,
+        decimals,
+        balance: newBalance,
+        weiBalance,
       }
     })
     .addCase(reduceTokenBalance, (state, { payload: { chainId, addr, decimals, amountToRemove } }) => {
       if (!state.tokenBalances[chainId]) state.tokenBalances[chainId] = {}
 
-      const oldBalance = state.tokenBalances[chainId]?.[addr].balance || 0
+      const { balance: newBalance, weiBalance } = subtractBalance(
+        state.tokenBalances[chainId]?.[addr].balance || 0,
+        amountToRemove,
+        decimals
+      )
 
-      if (oldBalance > 0) {
-        let newBalance = oldBalance - amountToRemove
-        newBalance = newBalance < 0 ? 0 : newBalance
-
-        const { weiBalance, BNBalance, JSBIBalance } = getBalanceFormats(newBalance, decimals)
-
-        state.tokenBalances[chainId][addr] = {
-          addr,
-          decimals,
-          balance: newBalance,
-          weiBalance,
-          BNBalance,
-          JSBIBalance,
-        }
+      state.tokenBalances[chainId][addr] = {
+        addr,
+        decimals,
+        balance: newBalance,
+        weiBalance,
       }
     })
 )

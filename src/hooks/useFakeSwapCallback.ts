@@ -64,26 +64,26 @@ export function useFakeSwapCallback(trade: Trade<Currency, Currency, TradeType> 
             outputCurrency.isNative
               ? increaseNativeBalance({
                   chainId,
-                  amountToAdd: Number(exactOutput),
+                  amountToAdd: exactOutput,
                 })
               : increaseTokenBalance({
                   chainId,
                   addr: outputCurrency.address,
                   decimals: outputCurrency.decimals,
-                  amountToAdd: Number(exactOutput),
+                  amountToAdd: exactOutput,
                 })
           )
           dispatch(
             inputCurrency.isNative
               ? reduceNativeBalance({
                   chainId,
-                  amountToRemove: Number(exactInput),
+                  amountToRemove: exactInput,
                 })
               : reduceTokenBalance({
                   chainId,
                   addr: inputCurrency.address,
                   decimals: inputCurrency.decimals,
-                  amountToRemove: Number(exactInput),
+                  amountToRemove: exactInput,
                 })
           )
         })
