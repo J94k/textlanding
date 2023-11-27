@@ -18,6 +18,7 @@ import { ChangeEvent, KeyboardEvent, RefObject, useCallback, useEffect, useMemo,
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
+import { useModifiedTokens, useNativeBalance } from 'state/user/hooks'
 import styled, { useTheme } from 'styled-components'
 import { CloseIcon, ThemedText } from 'theme/components'
 import { UserAddedToken } from 'types/tokens'
@@ -77,8 +78,9 @@ export function CurrencySearch({
   const isAddressSearch = isAddress(debouncedQuery)
   const searchToken = useToken(debouncedQuery)
   const searchTokenIsAdded = useIsUserAddedToken(searchToken)
-
   const defaultTokens = useDefaultActiveTokens(chainId)
+  const stateNativeBalance = useNativeBalance(chainId)
+  const modifiedTokens = useModifiedTokens(chainId) ?? {}
 
   const { data, loading: balancesAreLoading } = useCachedPortfolioBalancesQuery({ account })
   const balances: TokenBalances = useMemo(() => {
@@ -99,6 +101,14 @@ export function CurrencySearch({
       }, {} as TokenBalances) ?? {}
     )
   }, [chainId, data?.portfolios])
+
+  // const balances: TokenBalances = Object.keys(defaultTokens).reduce((acc, tokenAddress) => {
+  //   acc[tokenAddress.toLowerCase()] = {
+  //     usdValue: 10,
+  //     balance: 10,
+  //   }
+  //   return acc
+  // }, {} as TokenBalances)
 
   const sortedTokens: Token[] = useMemo(() => {
     const portfolioTokenBalances = data?.portfolios?.[0].tokenBalances as TokenBalance[] | undefined
@@ -329,6 +339,8 @@ export function CurrencySearch({
                   searchQuery={searchQuery}
                   isAddressSearch={isAddressSearch}
                   balances={balances}
+                  customNativeBalance={stateNativeBalance}
+                  customBalances={modifiedTokens}
                 />
               )}
             </AutoSizer>

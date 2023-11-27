@@ -6,6 +6,8 @@ import { Erc20Interface } from 'abis/types/Erc20'
 import JSBI from 'jsbi'
 import { useMultipleContractSingleData, useSingleContractMultipleData } from 'lib/hooks/multicall'
 import { useMemo } from 'react'
+// TODO Architecturally incorrect imort. Find a better way to replace balances with custom values.
+import { useModifiedTokens, useNativeBalance as useCustomNativeBalance } from 'state/user/hooks'
 
 import { nativeOnChain } from '../../constants/tokens'
 import { useInterfaceMulticall } from '../../hooks/useContract'
@@ -32,17 +34,22 @@ export function useNativeCurrencyBalances(uncheckedAddresses?: (string | undefin
     [uncheckedAddresses]
   )
 
+  const nativeBalance = useCustomNativeBalance(chainId)
   const results = useSingleContractMultipleData(multicallContract, 'getEthBalance', validAddressInputs)
 
   return useMemo(
     () =>
       validAddressInputs.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, [address], i) => {
-        const value = results?.[i]?.result?.[0]
-        if (value && chainId)
-          memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), JSBI.BigInt(value.toString()))
+        if (chainId && nativeBalance && !isNaN(Number(nativeBalance.weiBalance))) {
+          memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), nativeBalance.weiBalance)
+        } else {
+          const value = results?.[i]?.result?.[0]
+          if (value && chainId)
+            memo[address] = CurrencyAmount.fromRawAmount(nativeOnChain(chainId), JSBI.BigInt(value.toString()))
+        }
         return memo
       }, {}),
-    [validAddressInputs, chainId, results]
+    [validAddressInputs, chainId, nativeBalance, results]
   )
 }
 
@@ -62,6 +69,7 @@ export function useTokenBalancesWithLoadingIndicator(
     [chainId, tokens]
   )
   const validatedTokenAddresses = useMemo(() => validatedTokens.map((vt) => vt.address), [validatedTokens])
+  const modifiedTokens = useModifiedTokens(chainId)
 
   const balances = useMultipleContractSingleData(
     validatedTokenAddresses,
@@ -77,17 +85,24 @@ export function useTokenBalancesWithLoadingIndicator(
     () => [
       address && validatedTokens.length > 0
         ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
-            const value = balances?.[i]?.result?.[0]
-            const amount = value ? JSBI.BigInt(value.toString()) : undefined
-            if (amount) {
-              memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+            const customBalance = modifiedTokens?.[token.address] ?? null
+
+            if (customBalance && !isNaN(Number(customBalance.weiBalance))) {
+              memo[token.address] = CurrencyAmount.fromRawAmount(token, customBalance.weiBalance)
+            } else {
+              const value = balances?.[i]?.result?.[0]
+              const amount = value ? JSBI.BigInt(value.toString()) : undefined
+              if (amount) {
+                memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+              }
             }
+
             return memo
           }, {})
         : {},
       anyLoading,
     ],
-    [address, validatedTokens, anyLoading, balances]
+    [address, validatedTokens, anyLoading, balances, modifiedTokens]
   )
 }
 

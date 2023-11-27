@@ -45,6 +45,8 @@ it('renders loading rows when isLoading is true', () => {
       searchQuery=""
       isAddressSearch=""
       balances={{}}
+      customNativeBalance={null}
+      customBalances={{}}
     />
   )
   expect(component.findByTestId('loading-rows')).toBeTruthy()
@@ -65,6 +67,8 @@ it('renders currency rows correctly when currencies list is non-empty', () => {
       searchQuery=""
       isAddressSearch=""
       balances={{}}
+      customNativeBalance={null}
+      customBalances={{}}
     />
   )
   expect(screen.getByText('Wrapped BTC')).toBeInTheDocument()
@@ -91,6 +95,8 @@ it('renders currency rows correctly with balances', () => {
       balances={{
         [DAI.address.toLowerCase()]: { usdValue: 2, balance: 2 },
       }}
+      customNativeBalance={null}
+      customBalances={{}}
     />
   )
   expect(screen.getByText('Wrapped BTC')).toBeInTheDocument()

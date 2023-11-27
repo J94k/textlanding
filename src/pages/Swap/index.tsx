@@ -34,14 +34,15 @@ import { getChainInfo } from 'constants/chainInfo'
 import { asSupportedChain, isSupportedChain } from 'constants/chains'
 import { getSwapCurrencyId, TOKEN_SHORTHANDS } from 'constants/tokens'
 import { useCurrency, useDefaultActiveTokens } from 'hooks/Tokens'
+import { useFakeSwapCallback } from 'hooks/useFakeSwapCallback'
+import useFakeWrapCallback, { WrapErrorText, WrapType } from 'hooks/useFakeWrapCallback'
 import { useIsSwapUnsupported } from 'hooks/useIsSwapUnsupported'
 import { useMaxAmountIn } from 'hooks/useMaxAmountIn'
 import usePermit2Allowance, { AllowanceState } from 'hooks/usePermit2Allowance'
 import usePrevious from 'hooks/usePrevious'
-import { SwapResult, useSwapCallback } from 'hooks/useSwapCallback'
+import { SwapResult } from 'hooks/useSwapCallback'
 import { useSwitchChain } from 'hooks/useSwitchChain'
 import { useUSDPrice } from 'hooks/useUSDPrice'
-import useWrapCallback, { WrapErrorText, WrapType } from 'hooks/useWrapCallback'
 import JSBI from 'jsbi'
 import { formatSwapQuoteReceivedEventProperties } from 'lib/utils/analytics'
 import { ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
@@ -308,7 +309,7 @@ export function Swap({
     wrapType,
     execute: onWrap,
     inputError: wrapInputError,
-  } = useWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
+  } = useFakeWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
   const showWrap: boolean = wrapType !== WrapType.NOT_APPLICABLE
 
   const parsedAmounts = useMemo(
@@ -443,12 +444,7 @@ export function Swap({
   }, [fiatValueTradeInput.data, fiatValueTradeOutput.data, outputFeeFiatValue])
 
   // the callback to execute the swap
-  const swapCallback = useSwapCallback(
-    trade,
-    swapFiatValues,
-    allowedSlippage,
-    allowance.state === AllowanceState.ALLOWED ? allowance.permitSignature : undefined
-  )
+  const swapCallback = useFakeSwapCallback(trade, swapFiatValues, allowedSlippage)
 
   const handleContinueToReview = useCallback(() => {
     setSwapState({

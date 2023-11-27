@@ -42,10 +42,11 @@ function isLocalhost({ hostname }: { hostname: string }): boolean {
 }
 
 export function isSentryEnabled(): boolean {
+  return false
   // Disable in e2e test environments
-  if (isStagingEnv() && !isAppUniswapStagingOrg(window.location)) return false
-  if (isProductionEnv() && !isAppUniswapOrg(window.location)) return false
-  return process.env.REACT_APP_SENTRY_ENABLED === 'true'
+  // if (isStagingEnv() && !isAppUniswapStagingOrg(window.location)) return false
+  // if (isProductionEnv() && !isAppUniswapOrg(window.location)) return false
+  // return process.env.REACT_APP_SENTRY_ENABLED === 'true'
 }
 
 export function getEnvName(): 'production' | 'staging' | 'development' {

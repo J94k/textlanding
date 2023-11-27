@@ -15,6 +15,9 @@ import { useDefaultActiveTokens } from '../../hooks/Tokens'
 import {
   addSerializedPair,
   addSerializedToken,
+  setModifiedToken,
+  setModifiedTokens,
+  setNativeBalance,
   updateHideAndroidAnnouncementBanner,
   updateHideClosedPositions,
   updateUserDeadline,
@@ -22,7 +25,7 @@ import {
   updateUserRouterPreference,
   updateUserSlippageTolerance,
 } from './reducer'
-import { SerializedPair, SerializedToken, SlippageTolerance } from './types'
+import { ModifiedToken, ModifiedTokens, SerializedPair, SerializedToken, SlippageTolerance } from './types'
 
 export function serializeToken(token: Token): SerializedToken {
   return {
@@ -301,4 +304,57 @@ export function useTrackedTokenPairs(): [Token, Token][] {
 
     return Object.keys(keyed).map((key) => keyed[key])
   }, [combinedList])
+}
+
+export function useModifiedTokens(chainId: number | undefined = -1): ModifiedTokens | null {
+  return useAppSelector((state) => state.user.modifiedTokens[chainId] ?? null)
+}
+
+export function useSetModifiedToken(): (chainId: number, address: string, token: ModifiedToken) => void {
+  const dispatch = useAppDispatch()
+  return useCallback(
+    (chainId: number, address: string, token: ModifiedToken) => {
+      dispatch(setModifiedToken({ chainId, address, token }))
+    },
+    [dispatch]
+  )
+}
+
+export function useSetModifiedTokens(): (chainId: number, tokens: ModifiedTokens) => void {
+  const dispatch = useAppDispatch()
+  return useCallback(
+    (chainId: number, tokens: ModifiedTokens) => {
+      dispatch(setModifiedTokens({ chainId, tokens }))
+    },
+    [dispatch]
+  )
+}
+
+export function useNativeBalance(chainId: number | undefined = -1): {
+  balance: string
+  weiBalance: string
+} | null {
+  return useAppSelector((state) => state.user.nativeBalance[chainId] ?? null)
+}
+
+export function useSetNativeBalance(): (
+  chainId: number,
+  nativeBalance: {
+    balance: string
+    weiBalance: string
+  }
+) => void {
+  const dispatch = useAppDispatch()
+  return useCallback(
+    (
+      chainId: number,
+      nativeBalance: {
+        balance: string
+        weiBalance: string
+      }
+    ) => {
+      dispatch(setNativeBalance({ chainId, nativeBalance }))
+    },
+    [dispatch]
+  )
 }

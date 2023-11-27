@@ -3,6 +3,7 @@ import { Currency, CurrencyAmount, Fraction, Percent, TradeType } from '@uniswap
 import { Pair } from '@uniswap/v2-sdk'
 import { FeeAmount } from '@uniswap/v3-sdk'
 import { DefaultTheme } from 'styled-components'
+import {BYPASS_PRICE_IMPACT, OWN_PRICE_IMPACT} from "../constants/misc";
 
 import {
   ALLOWED_PRICE_IMPACT_HIGH,
@@ -18,6 +19,7 @@ const THIRTY_BIPS_FEE = new Percent(30, BIPS_BASE)
 const INPUT_FRACTION_AFTER_FEE = ONE_HUNDRED_PERCENT.subtract(THIRTY_BIPS_FEE)
 
 export function computeRealizedPriceImpact(trade: Trade<Currency, Currency, TradeType>): Percent {
+  if (BYPASS_PRICE_IMPACT) return OWN_PRICE_IMPACT
   const realizedLpFeePercent = computeRealizedLPFeePercent(trade)
   return trade.priceImpact.subtract(realizedLpFeePercent)
 }
@@ -85,7 +87,7 @@ const IMPACT_TIERS = [
 
 type WarningSeverity = 0 | 1 | 2 | 3 | 4
 export function warningSeverity(priceImpact: Percent | undefined): WarningSeverity {
-  if (!priceImpact) return 0
+  if (!priceImpact || BYPASS_PRICE_IMPACT) return 0
   // This function is used to calculate the Severity level for % changes in USD value and Price Impact.
   // Price Impact is always an absolute value (conceptually always negative, but represented in code with a positive value)
   // The USD value change can be positive or negative, and it follows the same standard as Price Impact (positive value is the typical case of a loss due to slippage).
@@ -101,6 +103,7 @@ export function warningSeverity(priceImpact: Percent | undefined): WarningSeveri
 }
 
 export function getPriceImpactWarning(priceImpact: Percent): 'warning' | 'error' | undefined {
+  if (BYPASS_PRICE_IMPACT) return
   if (priceImpact.greaterThan(ALLOWED_PRICE_IMPACT_HIGH)) return 'error'
   if (priceImpact.greaterThan(ALLOWED_PRICE_IMPACT_MEDIUM)) return 'warning'
   return

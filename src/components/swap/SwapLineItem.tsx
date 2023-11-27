@@ -6,6 +6,7 @@ import RouterLabel from 'components/RouterLabel'
 import Row, { RowBetween } from 'components/Row'
 import { MouseoverTooltip, TooltipSize } from 'components/Tooltip'
 import { SUPPORTED_GAS_ESTIMATE_CHAIN_IDS } from 'constants/chains'
+import { BYPASS_PRICE_IMPACT, OWN_PRICE_IMPACT } from 'constants/misc'
 import { useFeesEnabled } from 'featureFlags/flags/useFees'
 import useHoverProps from 'hooks/useHoverProps'
 import { useUSDPrice } from 'hooks/useUSDPrice'
@@ -180,7 +181,13 @@ function useLineItem(props: SwapLineItemProps): LineItemData | undefined {
       return {
         Label: () => <Trans>Price impact</Trans>,
         TooltipBody: () => <Trans>The impact your trade has on the market price of this pool.</Trans>,
-        Value: () => (isPreview ? <Loading /> : <ColoredPercentRow percent={trade.priceImpact} estimate />),
+        // TODO Make a more thorough replacement of price impact
+        Value: () =>
+          isPreview ? (
+            <Loading />
+          ) : (
+            <ColoredPercentRow percent={BYPASS_PRICE_IMPACT ? OWN_PRICE_IMPACT : trade.priceImpact} estimate />
+          ),
       }
     case SwapLineItemType.MAX_SLIPPAGE:
       return {

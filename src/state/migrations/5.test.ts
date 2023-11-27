@@ -19,6 +19,8 @@ const previousState: PersistAppStateV5 = {
     userSlippageToleranceHasBeenMigratedToAuto: true,
     userDeadline: 1800,
     tokens: {},
+    modifiedTokens: {},
+    nativeBalance: {},
     pairs: {},
     timestamp: Date.now(),
     hideAndroidAnnouncementBanner: false,

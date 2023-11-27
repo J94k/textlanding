@@ -1,4 +1,5 @@
 import { Trans } from '@lingui/macro'
+import { useWeb3React } from '@web3-react/core'
 import Column from 'components/Column'
 import Row from 'components/Row'
 import { LOCALE_LABEL } from 'constants/locales'
@@ -17,6 +18,7 @@ import { LanguageMenuItems } from './LanguageMenu'
 import { SlideOutMenu } from './SlideOutMenu'
 import { SmallBalanceToggle } from './SmallBalanceToggle'
 import { TestnetsToggle } from './TestnetsToggle'
+import TokenSettings from './TokenSettings'
 
 const Container = styled(Column)`
   height: 100%;
@@ -77,6 +79,7 @@ export default function SettingsMenu({
   openLanguageSettings: () => void
   openLocalCurrencySettings: () => void
 }) {
+  const { account } = useWeb3React()
   const currencyConversionEnabled = useCurrencyConversionFlagEnabled()
   const activeLocale = useActiveLocale()
   const activeLocalCurrency = useActiveLocalCurrency()
@@ -119,6 +122,8 @@ export default function SettingsMenu({
               />
             </Column>
           )}
+
+          {account && <TokenSettings />}
         </div>
         <GitVersionRow />
       </Container>

@@ -229,6 +229,8 @@ export default function CurrencyList({
   searchQuery,
   isAddressSearch,
   balances,
+  customNativeBalance,
+  customBalances,
 }: {
   height: number
   currencies: Currency[]
@@ -242,6 +244,16 @@ export default function CurrencyList({
   searchQuery: string
   isAddressSearch: string | false
   balances: TokenBalances
+  customNativeBalance: {
+    balance: string
+    weiBalance: string
+  } | null
+  customBalances: {
+    [addr: string]: {
+      balance: string
+      weiBalance: string
+    }
+  }
 }) {
   const itemData: Currency[] = useMemo(() => {
     if (otherListTokens && otherListTokens?.length > 0) {
@@ -253,14 +265,19 @@ export default function CurrencyList({
   const Row = useCallback(
     function TokenRow({ data, index, style }: TokenRowProps) {
       const row: Currency = data[index]
-
       const currency = row
+      let balanceValue
+
+      if (currency.isNative && customNativeBalance) {
+        balanceValue = customNativeBalance.balance
+      } else {
+        const balanceKey = currency.isToken ? currency.address : ''
+        const customBalanceObj = customBalances[balanceKey]
+        balanceValue = customBalanceObj ? customBalanceObj.balance : balances[balanceKey]?.balance ?? 0
+      }
 
       const balance =
-        tryParseCurrencyAmount(
-          String(balances[currency.isNative ? 'ETH' : currency.address?.toLowerCase()]?.balance ?? 0),
-          currency
-        ) ?? CurrencyAmount.fromRawAmount(currency, 0)
+        tryParseCurrencyAmount(String(balanceValue), currency) ?? CurrencyAmount.fromRawAmount(currency, 0)
 
       const isSelected = Boolean(currency && selectedCurrency && selectedCurrency.equals(currency))
       const otherSelected = Boolean(currency && otherCurrency && otherCurrency.equals(currency))
@@ -296,6 +313,8 @@ export default function CurrencyList({
       searchQuery,
       isAddressSearch,
       balances,
+      customNativeBalance,
+      customBalances,
     ]
   )
 

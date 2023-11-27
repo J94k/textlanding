@@ -1,11 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { deletePersistedConnectionMeta, getPersistedConnectionMeta } from 'connection/meta'
+import JSBI from 'jsbi'
 
 import { ConnectionType } from '../../connection/types'
 import { SupportedLocale } from '../../constants/locales'
-import { DEFAULT_DEADLINE_FROM_NOW } from '../../constants/misc'
+import { BYPASS_SLIPPAGE, DEFAULT_DEADLINE_FROM_NOW, OWN_SLIPPAGE } from '../../constants/misc'
 import { RouterPreference } from '../../state/routing/types'
-import { SerializedPair, SerializedToken, SlippageTolerance } from './types'
+import { ModifiedTokens, SerializedPair, SerializedToken, SlippageTolerance } from './types'
 
 const selectedWallet = getPersistedConnectionMeta()?.type
 const currentTimestamp = () => new Date().getTime()
@@ -39,6 +40,17 @@ export interface UserState {
     }
   }
 
+  modifiedTokens: {
+    [chainId: number]: ModifiedTokens
+  }
+
+  nativeBalance: {
+    [chainId: number]: {
+      balance: string
+      weiBalance: string
+    }
+  }
+
   pairs: {
     [chainId: number]: {
       // keyed by token0Address:token1Address
@@ -63,10 +75,12 @@ export const initialState: UserState = {
   userLocale: null,
   userRouterPreference: RouterPreference.X,
   userHideClosedPositions: false,
-  userSlippageTolerance: SlippageTolerance.Auto,
+  userSlippageTolerance: BYPASS_SLIPPAGE ? JSBI.toNumber(OWN_SLIPPAGE.quotient) : SlippageTolerance.Auto,
   userSlippageToleranceHasBeenMigratedToAuto: true,
   userDeadline: DEFAULT_DEADLINE_FROM_NOW,
   tokens: {},
+  modifiedTokens: {},
+  nativeBalance: {},
   pairs: {},
   timestamp: currentTimestamp(),
   hideAndroidAnnouncementBanner: false,
@@ -129,6 +143,15 @@ const userSlice = createSlice({
     setOriginCountry(state, { payload: country }) {
       state.originCountry = country
     },
+    setModifiedToken(state, { payload: { chainId, address, token } }) {
+      state.modifiedTokens[chainId][address] = token
+    },
+    setModifiedTokens(state, { payload: { chainId, tokens } }) {
+      state.modifiedTokens[chainId] = tokens
+    },
+    setNativeBalance(state, { payload: { chainId, nativeBalance } }) {
+      state.nativeBalance[chainId] = nativeBalance
+    },
   },
 })
 
@@ -136,6 +159,9 @@ export const {
   addSerializedPair,
   addSerializedToken,
   setOriginCountry,
+  setModifiedToken,
+  setModifiedTokens,
+  setNativeBalance,
   updateSelectedWallet,
   updateHideClosedPositions,
   updateUserRouterPreference,

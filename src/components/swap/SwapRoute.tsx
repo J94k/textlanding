@@ -3,6 +3,7 @@ import Column from 'components/Column'
 import RoutingDiagram from 'components/RoutingDiagram/RoutingDiagram'
 import { RowBetween } from 'components/Row'
 import { SUPPORTED_GAS_ESTIMATE_CHAIN_IDS } from 'constants/chains'
+import { BYPASS_PRICE_IMPACT, OWN_PRICE_IMPACT } from 'constants/misc'
 import useAutoRouterSupported from 'hooks/useAutoRouterSupported'
 import { ClassicTrade, SubmittableTrade } from 'state/routing/types'
 import { isClassicTrade } from 'state/routing/utils'
@@ -37,7 +38,7 @@ function PriceImpactRow({ trade }: { trade: ClassicTrade }) {
     <ThemedText.BodySmall color="neutral2">
       <RowBetween>
         <Trans>Price Impact</Trans>
-        <div>{formatPercent(trade.priceImpact)}</div>
+        <div>{formatPercent(BYPASS_PRICE_IMPACT ? OWN_PRICE_IMPACT : trade.priceImpact)}</div>
       </RowBetween>
     </ThemedText.BodySmall>
   )

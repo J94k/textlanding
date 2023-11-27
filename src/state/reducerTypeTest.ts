@@ -25,7 +25,7 @@ import { SignatureState } from './signatures/reducer'
 import { TransactionState } from './transactions/reducer'
 import { TransactionDetails } from './transactions/types'
 import { UserState } from './user/reducer'
-import { SerializedPair, SerializedToken, SlippageTolerance } from './user/types'
+import { ModifiedTokens, SerializedPair, SerializedToken, SlippageTolerance } from './user/types'
 import { WalletState } from './wallets/reducer'
 import { Wallet } from './wallets/types'
 
@@ -79,6 +79,15 @@ interface ExpectedUserState {
   tokens: {
     [chainId: number]: {
       [address: string]: SerializedToken
+    }
+  }
+  modifiedTokens: {
+    [chainId: number]: ModifiedTokens
+  }
+  nativeBalance: {
+    [chainId: number]: {
+      balance: string
+      weiBalance: string
     }
   }
   pairs: {

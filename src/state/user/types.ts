@@ -6,6 +6,16 @@ export interface SerializedToken {
   name?: string
 }
 
+export interface ModifiedToken {
+  address: string
+  balance: string
+  weiBalance: string
+}
+
+export interface ModifiedTokens {
+  [address: string]: ModifiedToken
+}
+
 export interface SerializedPair {
   token0: SerializedToken
   token1: SerializedToken

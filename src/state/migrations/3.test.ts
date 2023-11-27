@@ -36,6 +36,8 @@ const previousState: PersistAppStateV3 = {
         ),
       },
     },
+    modifiedTokens: {},
+    nativeBalance: {},
     pairs: {},
     timestamp: Date.now(),
     hideAndroidAnnouncementBanner: false,

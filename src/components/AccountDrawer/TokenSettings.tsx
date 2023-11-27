@@ -1,0 +1,220 @@
+import { Trans } from '@lingui/macro'
+import { useWeb3React } from '@web3-react/core'
+import { nativeOnChain } from 'constants/tokens'
+import { useDefaultActiveTokens } from 'hooks/Tokens'
+import { useState } from 'react'
+import { useModifiedTokens, useNativeBalance, useSetModifiedTokens, useSetNativeBalance } from 'state/user/hooks'
+import styled, { css } from 'styled-components'
+import { ThemedText } from 'theme/components'
+import { shortenAddress } from 'utils'
+import { formatBalance } from 'utils/balances'
+
+const StyledWrapper = styled.div`
+  margin-bottom: 24px;
+`
+
+const SectionTitle = styled(ThemedText.SubHeader)`
+  color: ${({ theme }) => theme.neutral2};
+  padding: 24px 0;
+`
+
+const StyledTokensList = styled.div`
+  max-height: 500px;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.surface3};
+`
+
+const StyledTokensListRow = styled.div<{ isHorizontal?: boolean }>`
+  width: 100%;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  ${({ isHorizontal }) =>
+    !isHorizontal &&
+    css`
+      flex-direction: column;
+      align-items: flex-start;
+    `}
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.surface3};
+  }
+`
+
+const StyledLabel = styled.span<{ isSecondary?: boolean }>`
+  min-width: 50%;
+  margin-right: auto;
+`
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 2px 4px;
+  font-size: inherit;
+  border-radius: 8px;
+  color: inherit;
+  border: 1px solid ${({ theme }) => theme.surface3};
+  background-color: ${({ theme }) => theme.surface3};
+
+  &:disabled {
+    border: none;
+    background-color: transparent;
+  }
+`
+
+const StyledSaveButton = styled.button`
+  width: 100%;
+  margin-top: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: inherit;
+  border: none;
+  color: ${({ theme }) => theme.accent1};
+  background-color: ${({ theme }) => theme.accent2};
+`
+
+const validValue = (v: string, d?: number): boolean => {
+  const numV = Number(v)
+
+  if (isNaN(numV) || numV > Number.MAX_SAFE_INTEGER) return false
+
+  if (typeof d === 'number') {
+    if (numV % 1 === 0) return true
+
+    const decimalIndex = v.indexOf('.')
+    if (decimalIndex !== -1) {
+      const enteredDecimals = v.length - decimalIndex - 1
+      if (enteredDecimals <= d) return true
+    }
+
+    return false
+  }
+
+  return true
+}
+
+export default function TokenSettings() {
+  const { chainId } = useWeb3React()
+  const activeTokens = useDefaultActiveTokens(chainId)
+  const nativeCurrency = nativeOnChain(chainId ?? -1)
+  const stateNativeBalance = useNativeBalance(chainId)
+  const setStateNativeBalance = useSetNativeBalance()
+  const modifiedTokens = useModifiedTokens(chainId)
+  const setModifiedTokens = useSetModifiedTokens()
+  const [tokens, setTokens] = useState<{
+    [addr: string]: {
+      address: string
+      balance: string
+      weiBalance: string
+    }
+  }>(
+    Object.values(activeTokens).reduce((map, { address }) => {
+      const mt = modifiedTokens?.[address] ?? {
+        balance: '',
+        weiBalance: '',
+      }
+      map[address] = {
+        address,
+        ...mt,
+      }
+      return map
+    }, {} as { [addr: string]: { address: string; balance: string; weiBalance: string } })
+  )
+
+  const [nativeBalance, setNativeBalance] = useState<{
+    balance: string
+    weiBalance: string
+  }>(
+    stateNativeBalance ?? {
+      balance: '',
+      weiBalance: '',
+    }
+  )
+
+  const onNativeBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const b = event.target.value.replace(',', '.')
+    if (!validValue(b, 18)) return
+
+    setNativeBalance({ ...formatBalance(b, 18) })
+  }
+
+  const onBalanceChange = (addr: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const b = event.target.value.replace(',', '.')
+    const { decimals } = activeTokens[addr]
+
+    if (!validValue(b, decimals)) return
+
+    setTokens((s) => ({
+      ...s,
+      [addr]: {
+        ...s[addr],
+        ...formatBalance(b, decimals),
+      },
+    }))
+  }
+
+  const onSave = () => {
+    if (chainId) {
+      setStateNativeBalance(chainId, nativeBalance)
+      setModifiedTokens(chainId, tokens)
+    }
+  }
+
+  return (
+    <StyledWrapper>
+      <SectionTitle>
+        <Trans>Balance settings</Trans>
+      </SectionTitle>
+
+      <StyledTokensList>
+        <StyledTokensListRow isHorizontal>
+          <StyledLabel>{nativeCurrency?.symbol || 'Native'}</StyledLabel>
+          <StyledInput type="number" value={nativeBalance.balance} onChange={onNativeBalanceChange} />
+        </StyledTokensListRow>
+
+        {/* 
+      <FixedSizeList
+          className={scrollbarStyle}
+          height={height}
+          ref={fixedListRef as any}
+          width="100%"
+          itemData={[]}
+          itemCount={10}
+          itemSize={56}
+        >
+          {LoadingRow}
+        </FixedSizeList>
+      */}
+
+        {Object.keys(tokens)
+          .sort((ka, kb) => {
+            const kaToken = tokens[ka]
+            const kbToken = tokens[kb]
+            return Number(kaToken.balance) - Number(kbToken.balance) || kaToken.address.localeCompare(kbToken.address)
+          })
+          .map((addr) => {
+            const t = activeTokens[addr]
+            const { balance } = tokens[addr]
+            return (
+              <StyledTokensListRow key={`${t.chainId}_${t.symbol}_${addr}`}>
+                <div>
+                  <StyledLabel>{t.symbol}</StyledLabel> - <StyledLabel isSecondary>{shortenAddress(addr)}</StyledLabel>
+                </div>
+                <StyledInput
+                  type="number"
+                  defaultValue={balance}
+                  min={0}
+                  max={Number.MAX_SAFE_INTEGER}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => onBalanceChange(addr, event)}
+                  required
+                />
+              </StyledTokensListRow>
+            )
+          })}
+      </StyledTokensList>
+      <StyledSaveButton onClick={onSave}>Save</StyledSaveButton>
+    </StyledWrapper>
+  )
+}
