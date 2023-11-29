@@ -2,8 +2,9 @@ import { Trans } from '@lingui/macro'
 import { useWeb3React } from '@web3-react/core'
 import { nativeOnChain } from 'constants/tokens'
 import { useDefaultActiveTokens } from 'hooks/Tokens'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useModifiedTokens, useNativeBalance, useSetModifiedTokens, useSetNativeBalance } from 'state/user/hooks'
+import { ModifiedTokens } from 'state/user/types'
 import styled, { css } from 'styled-components'
 import { ThemedText } from 'theme/components'
 import { shortenAddress } from 'utils'
@@ -103,13 +104,8 @@ export default function TokenSettings() {
   const setStateNativeBalance = useSetNativeBalance()
   const modifiedTokens = useModifiedTokens(chainId)
   const setModifiedTokens = useSetModifiedTokens()
-  const [tokens, setTokens] = useState<{
-    [addr: string]: {
-      address: string
-      balance: string
-      weiBalance: string
-    }
-  }>(
+  const [tokenFilter, setTokenFilter] = useState<string>('')
+  const [tokens, setTokens] = useState<ModifiedTokens>(
     Object.values(activeTokens).reduce((map, { address }) => {
       const mt = modifiedTokens?.[address] ?? {
         balance: '',
@@ -122,6 +118,21 @@ export default function TokenSettings() {
       return map
     }, {} as { [addr: string]: { address: string; balance: string; weiBalance: string } })
   )
+  const [filteredTokens, setFilteredTokens] = useState<ModifiedTokens>({})
+
+  useEffect(() => {
+    const f = tokenFilter.trim().toLowerCase()
+    const filtered = Object.values(tokens).filter((token) => {
+      const { symbol, name } = activeTokens[token.address]
+      return `${token.address.toLowerCase()}_${symbol?.includes(f) ?? ''}_${name?.includes(f) ?? ''}`.includes(f)
+    })
+    setFilteredTokens(
+      filtered.reduce((acc, token) => {
+        acc[token.address] = token
+        return acc
+      }, {} as ModifiedTokens)
+    )
+  }, [tokenFilter, tokens, activeTokens])
 
   const [nativeBalance, setNativeBalance] = useState<{
     balance: string
@@ -162,6 +173,16 @@ export default function TokenSettings() {
     }
   }
 
+  let tokensToUse = tokens
+  if (Object.keys(filteredTokens).length > 0) {
+    tokensToUse = Object.keys(filteredTokens)
+      .slice(0, 5)
+      .reduce((acc, key) => {
+        acc[key] = filteredTokens[key]
+        return acc
+      }, {} as ModifiedTokens)
+  }
+
   return (
     <StyledWrapper>
       <SectionTitle>
@@ -170,10 +191,20 @@ export default function TokenSettings() {
 
       <StyledTokensList>
         <StyledTokensListRow isHorizontal>
+          <StyledLabel>Filter</StyledLabel>
+          <StyledInput
+            type="text"
+            value={tokenFilter}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTokenFilter(e.target.value)}
+          />
+        </StyledTokensListRow>
+
+        <StyledTokensListRow isHorizontal>
           <StyledLabel>{nativeCurrency?.symbol || 'Native'}</StyledLabel>
           <StyledInput type="number" value={nativeBalance.balance} onChange={onNativeBalanceChange} />
         </StyledTokensListRow>
-        {Object.keys(tokens)
+
+        {Object.keys(tokensToUse)
           .sort((ka, kb) => {
             const kaToken = tokens[ka]
             const kbToken = tokens[kb]
