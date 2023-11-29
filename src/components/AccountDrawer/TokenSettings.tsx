@@ -124,7 +124,7 @@ export default function TokenSettings() {
     const f = tokenFilter.trim().toLowerCase()
     const filtered = Object.values(tokens).filter((token) => {
       const { symbol, name } = activeTokens[token.address]
-      return `${token.address.toLowerCase()}_${symbol?.includes(f) ?? ''}_${name?.includes(f) ?? ''}`.includes(f)
+      return symbol?.includes(f) || name?.includes(f) || token.address.toLowerCase().includes(f)
     })
     setFilteredTokens(
       filtered.reduce((acc, token) => {
@@ -191,7 +191,9 @@ export default function TokenSettings() {
 
       <StyledTokensList>
         <StyledTokensListRow isHorizontal>
-          <StyledLabel>Filter</StyledLabel>
+          <StyledLabel>
+            <strong>Token filter</strong>
+          </StyledLabel>
           <StyledInput
             type="text"
             value={tokenFilter}
