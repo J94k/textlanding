@@ -173,26 +173,11 @@ export default function TokenSettings() {
           <StyledLabel>{nativeCurrency?.symbol || 'Native'}</StyledLabel>
           <StyledInput type="number" value={nativeBalance.balance} onChange={onNativeBalanceChange} />
         </StyledTokensListRow>
-
-        {/* 
-      <FixedSizeList
-          className={scrollbarStyle}
-          height={height}
-          ref={fixedListRef as any}
-          width="100%"
-          itemData={[]}
-          itemCount={10}
-          itemSize={56}
-        >
-          {LoadingRow}
-        </FixedSizeList>
-      */}
-
         {Object.keys(tokens)
           .sort((ka, kb) => {
             const kaToken = tokens[ka]
             const kbToken = tokens[kb]
-            return Number(kaToken.balance) - Number(kbToken.balance) || kaToken.address.localeCompare(kbToken.address)
+            return Number(kbToken.balance) - Number(kaToken.balance) || kbToken.address.localeCompare(kaToken.address)
           })
           .map((addr) => {
             const t = activeTokens[addr]
