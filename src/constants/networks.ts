@@ -127,33 +127,62 @@ export const FALLBACK_URLS = {
  */
 export const RPC_URLS = {
   [ChainId.MAINNET]: [
+    `https://rpc.payload.de`,
     `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     QUICKNODE_MAINNET_RPC_URL,
     ...FALLBACK_URLS[ChainId.MAINNET],
   ],
-  [ChainId.GOERLI]: [`https://goerli.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[ChainId.GOERLI]],
-  [ChainId.SEPOLIA]: [`https://sepolia.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[ChainId.SEPOLIA]],
-  [ChainId.OPTIMISM]: [`https://optimism-mainnet.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[ChainId.OPTIMISM]],
+  [ChainId.GOERLI]: [
+    `https://eth-goerli.public.blastapi.io`,
+    `https://goerli.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[ChainId.GOERLI],
+  ],
+  [ChainId.SEPOLIA]: [
+    `https://1rpc.io/sepolia`,
+    `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[ChainId.SEPOLIA],
+  ],
+  [ChainId.OPTIMISM]: [
+    `https://mainnet.optimism.io`,
+    `https://optimism-mainnet.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[ChainId.OPTIMISM],
+  ],
   [ChainId.OPTIMISM_GOERLI]: [
+    `https://optimism-goerli.public.blastapi.io`,
     `https://optimism-goerli.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[ChainId.OPTIMISM_GOERLI],
   ],
   [ChainId.ARBITRUM_ONE]: [
+    `https://arbitrum.llamarpc.com`,
     `https://arbitrum-mainnet.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[ChainId.ARBITRUM_ONE],
   ],
   [ChainId.ARBITRUM_GOERLI]: [
+    `https://arbitrum-goerli.public.blastapi.io`,
     `https://arbitrum-goerli.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[ChainId.ARBITRUM_GOERLI],
   ],
-  [ChainId.POLYGON]: [`https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[ChainId.POLYGON]],
+  [ChainId.POLYGON]: [
+    `https://polygon.llamarpc.com`,
+    `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[ChainId.POLYGON],
+  ],
   [ChainId.POLYGON_MUMBAI]: [
+    `https://polygon-testnet.public.blastapi.io`,
     `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
     ...FALLBACK_URLS[ChainId.POLYGON_MUMBAI],
   ],
-  [ChainId.CELO]: FALLBACK_URLS[ChainId.CELO],
-  [ChainId.CELO_ALFAJORES]: FALLBACK_URLS[ChainId.CELO_ALFAJORES],
-  [ChainId.BNB]: [QUICKNODE_BNB_RPC_URL, ...FALLBACK_URLS[ChainId.BNB]],
-  [ChainId.AVALANCHE]: [`https://avalanche-mainnet.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[ChainId.AVALANCHE]],
-  [ChainId.BASE]: [`https://base-mainnet.infura.io/v3/${INFURA_KEY}`, ...FALLBACK_URLS[ChainId.BASE]],
+  [ChainId.CELO]: [`https://1rpc.io/celo`, ...FALLBACK_URLS[ChainId.CELO]],
+  [ChainId.CELO_ALFAJORES]: [`https://alfajores-forno.celo-testnet.org`, ...FALLBACK_URLS[ChainId.CELO_ALFAJORES]],
+  [ChainId.BNB]: [`https://bsc-dataseed4.bnbchain.org`, QUICKNODE_BNB_RPC_URL, ...FALLBACK_URLS[ChainId.BNB]],
+  [ChainId.AVALANCHE]: [
+    `https://avax-pokt.nodies.app/ext/bc/C/rpc`,
+    `https://avalanche-mainnet.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[ChainId.AVALANCHE],
+  ],
+  [ChainId.BASE]: [
+    `https://base.llamarpc.com`,
+    `https://base-mainnet.infura.io/v3/${INFURA_KEY}`,
+    ...FALLBACK_URLS[ChainId.BASE],
+  ],
 }
