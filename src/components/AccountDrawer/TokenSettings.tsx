@@ -173,6 +173,9 @@ export default function TokenSettings() {
     }
   }
 
+  console.log('tokens', tokens)
+  console.log('filteredTokens', filteredTokens)
+
   let tokensToUse = tokens
   if (Object.keys(filteredTokens).length > 0) {
     tokensToUse = Object.keys(filteredTokens)
@@ -182,6 +185,8 @@ export default function TokenSettings() {
         return acc
       }, {} as ModifiedTokens)
   }
+
+  console.log('tokensToUse', tokensToUse)
 
   return (
     <StyledWrapper>
