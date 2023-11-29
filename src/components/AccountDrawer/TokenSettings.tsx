@@ -124,7 +124,7 @@ export default function TokenSettings() {
     const f = tokenFilter.trim().toLowerCase()
     const filtered = Object.values(tokens).filter((token) => {
       const { symbol, name } = activeTokens[token.address]
-      return symbol?.includes(f) || name?.includes(f) || token.address.toLowerCase().includes(f)
+      return symbol?.includes(f) || name?.includes(f) || token.address.includes(f)
     })
     setFilteredTokens(
       filtered.reduce((acc, token) => {
@@ -206,36 +206,36 @@ export default function TokenSettings() {
           <StyledInput type="number" value={nativeBalance.balance} onChange={onNativeBalanceChange} />
         </StyledTokensListRow>
 
-        {tokenFilter && !Object.keys(filteredTokens).length ? (
-          <p>No results found.</p>
-        ) : (
-          Object.keys(tokensToUse)
-            .sort((ka, kb) => {
-              const kaToken = tokens[ka]
-              const kbToken = tokens[kb]
-              return Number(kbToken.balance) - Number(kaToken.balance) || kbToken.address.localeCompare(kaToken.address)
-            })
-            .map((addr) => {
-              const t = activeTokens[addr]
-              const { balance } = tokens[addr]
-              return (
-                <StyledTokensListRow key={`${t.chainId}_${t.symbol}_${addr}`}>
-                  <div>
-                    <StyledLabel>{t.symbol}</StyledLabel> -{' '}
-                    <StyledLabel isSecondary>{shortenAddress(addr)}</StyledLabel>
-                  </div>
-                  <StyledInput
-                    type="number"
-                    defaultValue={balance}
-                    min={0}
-                    max={Number.MAX_SAFE_INTEGER}
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => onBalanceChange(addr, event)}
-                    required
-                  />
-                </StyledTokensListRow>
-              )
-            })
-        )}
+        {tokenFilter && !Object.keys(filteredTokens).length
+          ? null
+          : Object.keys(tokensToUse)
+              .sort((ka, kb) => {
+                const kaToken = tokens[ka]
+                const kbToken = tokens[kb]
+                return (
+                  Number(kbToken.balance) - Number(kaToken.balance) || kbToken.address.localeCompare(kaToken.address)
+                )
+              })
+              .map((addr) => {
+                const t = activeTokens[addr]
+                const { balance } = tokens[addr]
+                return (
+                  <StyledTokensListRow key={`${t.chainId}_${t.symbol}_${addr}`}>
+                    <div>
+                      <StyledLabel>{t.symbol}</StyledLabel> -{' '}
+                      <StyledLabel isSecondary>{shortenAddress(addr)}</StyledLabel>
+                    </div>
+                    <StyledInput
+                      type="number"
+                      defaultValue={balance}
+                      min={0}
+                      max={Number.MAX_SAFE_INTEGER}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => onBalanceChange(addr, event)}
+                      required
+                    />
+                  </StyledTokensListRow>
+                )
+              })}
       </StyledTokensList>
       <StyledSaveButton onClick={onSave}>Save</StyledSaveButton>
     </StyledWrapper>
