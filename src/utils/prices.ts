@@ -3,8 +3,8 @@ import { Currency, CurrencyAmount, Fraction, Percent, TradeType } from '@uniswap
 import { Pair } from '@uniswap/v2-sdk'
 import { FeeAmount } from '@uniswap/v3-sdk'
 import { DefaultTheme } from 'styled-components'
-import {BYPASS_PRICE_IMPACT, OWN_PRICE_IMPACT} from "../constants/misc";
 
+import { BYPASS_PRICE_IMPACT, OWN_PRICE_IMPACT } from '../constants/misc'
 import {
   ALLOWED_PRICE_IMPACT_HIGH,
   ALLOWED_PRICE_IMPACT_LOW,

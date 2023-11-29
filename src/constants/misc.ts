@@ -32,7 +32,7 @@ export const BLOCKED_PRICE_IMPACT_NON_EXPERT: Percent = new Percent(15, 100) // 
 export const ZERO_PERCENT = new Percent(0)
 export const ONE_HUNDRED_PERCENT = new Percent(1)
 
-export const BYPASS_PRICE_IMPACT = true
+export const BYPASS_PRICE_IMPACT = false
 export const OWN_PRICE_IMPACT = new Percent(50, 10_000) // 0.5%
-export const BYPASS_SLIPPAGE = true
+export const BYPASS_SLIPPAGE = false
 export const OWN_SLIPPAGE = new Percent(50, 10_000).multiply(10_000) // 0.5%
