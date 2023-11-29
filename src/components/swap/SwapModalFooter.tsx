@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/macro'
 import { BrowserEvent, InterfaceElementName, SwapEventName } from '@uniswap/analytics-events'
-import { Percent } from '@uniswap/sdk-core'
+import { Percent, TradeType } from '@uniswap/sdk-core'
 import { TraceEvent } from 'analytics'
 import AnimatedDropdown from 'components/AnimatedDropdown'
 import Column from 'components/Column'
@@ -48,6 +48,10 @@ const DropdownControllerWrapper = styled.div`
   padding: 0 16px;
   min-width: fit-content;
   white-space: nowrap;
+`
+
+const SeparatorWrapper = styled.div`
+  margin-top: 16px;
 `
 
 const DropdownButton = styled.button`
@@ -113,14 +117,25 @@ export default function SwapModalFooter({
 
   return (
     <>
-      <DropdownController open={showMore} onClick={() => setShowMore(!showMore)} />
+      {/* <DropdownController open={showMore} onClick={() => setShowMore(!showMore)} /> */}
+      <SeparatorWrapper>
+        <Separator />
+      </SeparatorWrapper>
       <DetailsContainer gap="md">
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.EXCHANGE_RATE} />
+        <SwapLineItem {...lineItemProps} type={SwapLineItemType.NETWORK_COST} />
+        <SwapLineItem {...lineItemProps} type={SwapLineItemType.PRICE_IMPACT} />
+        {trade.tradeType === TradeType.EXACT_INPUT ? (
+          <SwapLineItem {...lineItemProps} type={SwapLineItemType.MINIMUM_OUTPUT} />
+        ) : (
+          <SwapLineItem {...lineItemProps} type={SwapLineItemType.MAXIMUM_INPUT} />
+        )}
+        {/*
         <ExpandableLineItems {...lineItemProps} open={showMore} />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.INPUT_TOKEN_FEE_ON_TRANSFER} />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.OUTPUT_TOKEN_FEE_ON_TRANSFER} />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.SWAP_FEE} />
-        <SwapLineItem {...lineItemProps} type={SwapLineItemType.NETWORK_COST} />
+        <SwapLineItem {...lineItemProps} type={SwapLineItemType.NETWORK_COST} /> */}
       </DetailsContainer>
       {showAcceptChanges ? (
         <SwapShowAcceptChanges data-testid="show-accept-changes">

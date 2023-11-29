@@ -37,6 +37,7 @@ export enum SwapLineItemType {
   SWAP_FEE,
   MAXIMUM_INPUT,
   MINIMUM_OUTPUT,
+  EXPECTED_OUTPUT,
   ROUTING_INFO,
 }
 
@@ -155,7 +156,7 @@ function useLineItem(props: SwapLineItemProps): LineItemData | undefined {
   switch (type) {
     case SwapLineItemType.EXCHANGE_RATE:
       return {
-        Label: () => <Trans>Rate</Trans>,
+        Label: () => <Trans>Exchange rate</Trans>,
         Value: () => <TradePrice price={trade.executionPrice} />,
         TooltipBody: !isPreview ? () => <RoutingTooltip trade={trade} /> : undefined,
         tooltipSize: isUniswapX ? TooltipSize.Small : TooltipSize.Large,
@@ -163,7 +164,7 @@ function useLineItem(props: SwapLineItemProps): LineItemData | undefined {
     case SwapLineItemType.NETWORK_COST:
       if (!SUPPORTED_GAS_ESTIMATE_CHAIN_IDS.includes(chainId)) return
       return {
-        Label: () => <Trans>Network cost</Trans>,
+        Label: () => <Trans>Network fee</Trans>,
         TooltipBody: () => <GasBreakdownTooltip trade={trade} hideUniswapXDescription />,
         Value: () => {
           if (isPreview) return <Loading />
@@ -215,7 +216,7 @@ function useLineItem(props: SwapLineItemProps): LineItemData | undefined {
     case SwapLineItemType.MAXIMUM_INPUT:
       if (trade.tradeType === TradeType.EXACT_INPUT) return
       return {
-        Label: () => <Trans>Pay at most</Trans>,
+        Label: () => <Trans>Maximum sent</Trans>,
         TooltipBody: () => (
           <Trans>
             The maximum amount you are guaranteed to spend. If the price slips any further, your transaction will
@@ -228,7 +229,7 @@ function useLineItem(props: SwapLineItemProps): LineItemData | undefined {
     case SwapLineItemType.MINIMUM_OUTPUT:
       if (trade.tradeType === TradeType.EXACT_OUTPUT) return
       return {
-        Label: () => <Trans>Receive at least</Trans>,
+        Label: () => <Trans>Minimum received</Trans>,
         TooltipBody: () => (
           <Trans>
             The minimum amount you are guaranteed to receive. If the price slips any further, your transaction will
@@ -236,6 +237,19 @@ function useLineItem(props: SwapLineItemProps): LineItemData | undefined {
           </Trans>
         ),
         Value: () => <CurrencyAmountRow amount={trade.minimumAmountOut(allowedSlippage)} />,
+        loaderWidth: 70,
+      }
+    case SwapLineItemType.EXPECTED_OUTPUT:
+      if (trade.tradeType === TradeType.EXACT_OUTPUT) return
+      return {
+        Label: () => <Trans>Expected output</Trans>,
+        TooltipBody: () => (
+          <Trans>
+            The amount you expect to receive at the current market price. You may receive less or more if the market
+            price changes while your transaction is pending.
+          </Trans>
+        ),
+        Value: () => <CurrencyAmountRow amount={trade.outputAmount} />,
         loaderWidth: 70,
       }
     case SwapLineItemType.ROUTING_INFO:

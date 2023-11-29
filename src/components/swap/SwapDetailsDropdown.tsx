@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/macro'
 import { BrowserEvent, InterfaceElementName, SwapEventName } from '@uniswap/analytics-events'
-import { Percent } from '@uniswap/sdk-core'
+import { Percent, TradeType } from '@uniswap/sdk-core'
 import { TraceEvent, useTrace } from 'analytics'
 import AnimatedDropdown from 'components/AnimatedDropdown'
 import Column from 'components/Column'
@@ -107,12 +107,18 @@ function AdvancedSwapDetails(props: SwapDetailsProps & { open: boolean }) {
     <AnimatedDropdown open={open}>
       <SwapDetailsWrapper gap="md" data-testid="advanced-swap-details">
         <Separator />
+        <SwapLineItem {...lineItemProps} type={SwapLineItemType.NETWORK_COST} />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.PRICE_IMPACT} />
-        <SwapLineItem {...lineItemProps} type={SwapLineItemType.MAX_SLIPPAGE} />
+        {trade.tradeType === TradeType.EXACT_INPUT ? (
+          <SwapLineItem {...lineItemProps} type={SwapLineItemType.MINIMUM_OUTPUT} />
+        ) : (
+          <SwapLineItem {...lineItemProps} type={SwapLineItemType.MAXIMUM_INPUT} />
+        )}
+        <SwapLineItem {...lineItemProps} type={SwapLineItemType.EXPECTED_OUTPUT} />
+        {/* <SwapLineItem {...lineItemProps} type={SwapLineItemType.MAX_SLIPPAGE} />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.INPUT_TOKEN_FEE_ON_TRANSFER} />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.OUTPUT_TOKEN_FEE_ON_TRANSFER} />
-        <SwapLineItem {...lineItemProps} type={SwapLineItemType.SWAP_FEE} />
-        <SwapLineItem {...lineItemProps} type={SwapLineItemType.NETWORK_COST} />
+        <SwapLineItem {...lineItemProps} type={SwapLineItemType.SWAP_FEE} /> */}
         <Separator />
         <SwapLineItem {...lineItemProps} type={SwapLineItemType.ROUTING_INFO} />
       </SwapDetailsWrapper>
