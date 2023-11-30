@@ -5,19 +5,11 @@ import { useDefaultActiveTokens } from 'hooks/Tokens'
 import { useEffect, useState } from 'react'
 import { TokenFromList } from 'state/lists/tokenFromList'
 import { useModifiedTokens, useNativeBalance, useSetModifiedTokens, useSetNativeBalance } from 'state/user/hooks'
-// import { ModifiedTokens } from 'state/user/types'
+import { ModifiedTokens } from 'state/user/types'
 import styled, { css } from 'styled-components'
 import { ThemedText } from 'theme/components'
 import { shortenAddress } from 'utils'
 import { formatBalance } from 'utils/balances'
-
-interface ModifiedTokens {
-  [address: string]: {
-    address: string
-    balance: string
-    weiBalance: string
-  }
-}
 
 const StyledWrapper = styled.div`
   margin-bottom: 24px;
@@ -86,7 +78,7 @@ const StyledSaveButton = styled.button`
 `
 
 const StyledMessage = styled.p`
-  padding: 8px;
+  padding: 0 8px;
 `
 
 const validValue = (v: string, d?: number): boolean => {
@@ -109,9 +101,9 @@ const validValue = (v: string, d?: number): boolean => {
   return true
 }
 
-const getFirstFiveTokens = (tokens: ModifiedTokens): ModifiedTokens => {
+const getFirstTokens = (tokens: ModifiedTokens, n = 5): ModifiedTokens => {
   return Object.keys(tokens)
-    .slice(0, 5)
+    .slice(0, n)
     .reduce((acc, key) => {
       acc[key] = tokens[key]
       return acc
@@ -142,35 +134,16 @@ export default function TokenSettings() {
   )
   const [filteredTokens, setFilteredTokens] = useState<ModifiedTokens>({})
 
-  console.group('%cTokens', 'color: brown;')
-  console.log('activeTokens', activeTokens)
-  console.log('tokens', tokens)
-  console.groupEnd()
-
   useEffect(() => {
-    const f = tokenFilter.trim().toLowerCase()
+    const f = tokenFilter.trim()
     const filtered = Object.values(tokens).filter((token) => {
       const activeToken = activeTokens[token.address]
       if (!activeToken) return
 
       const { tokenInfo = {} } = activeToken as TokenFromList
       const { symbol = '', name = '' } = tokenInfo as { symbol?: string; name?: string }
-      const match = symbol.includes(f) || name.includes(f) || token.address.toLowerCase().includes(f)
-
-      if (match) {
-        console.group('%cMatching token', 'color: green;')
-        console.log('token', token)
-        console.log('activeToken', activeToken)
-        console.log('tokenInfo', tokenInfo)
-        console.groupEnd()
-        return true
-      }
-      return false
+      return symbol.includes(f) || name.includes(f) || token.address.toLowerCase().includes(f.toLowerCase())
     })
-    console.group('%cFilter', 'color: orange;')
-    console.log('tokenFilter', tokenFilter)
-    console.log('filtered', filtered)
-    console.groupEnd()
 
     setFilteredTokens(
       getFirstFiveTokens(
@@ -221,7 +194,7 @@ export default function TokenSettings() {
     }
   }
 
-  let tokensToUse = getFirstFiveTokens(tokens)
+  let tokensToUse = getFirstTokens(tokens)
   if (tokenFilter && Object.keys(filteredTokens).length > 0) {
     tokensToUse = filteredTokens
   }
