@@ -155,7 +155,17 @@ export default function TokenSettings() {
 
       const { tokenInfo = {} } = activeToken as TokenFromList
       const { symbol = '', name = '' } = tokenInfo as { symbol?: string; name?: string }
-      return symbol.includes(f) || name.includes(f) || token.address.toLowerCase().includes(f)
+      const match = symbol.includes(f) || name.includes(f) || token.address.toLowerCase().includes(f)
+
+      if (match) {
+        console.group('%cMatching token', 'color: green;')
+        console.log('token', token)
+        console.log('activeToken', activeToken)
+        console.log('tokenInfo', tokenInfo)
+        console.groupEnd()
+        return true
+      }
+      return false
     })
     console.group('%cFilter', 'color: orange;')
     console.log('tokenFilter', tokenFilter)
