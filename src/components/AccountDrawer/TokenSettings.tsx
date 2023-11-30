@@ -146,7 +146,7 @@ export default function TokenSettings() {
     })
 
     setFilteredTokens(
-      getFirstFiveTokens(
+      getFirstTokens(
         filtered.reduce((acc, token) => {
           acc[token.address] = token
           return acc
