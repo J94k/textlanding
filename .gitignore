@@ -9,7 +9,6 @@
 
 # generated files
 /src/**/__generated__
-!/src/utils/__generated__
 
 # schema
 schema.graphql
