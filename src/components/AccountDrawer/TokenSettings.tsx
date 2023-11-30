@@ -76,6 +76,10 @@ const StyledSaveButton = styled.button`
   background-color: ${({ theme }) => theme.accent2};
 `
 
+const StyledMessage = styled.p`
+  padding: 8px;
+`
+
 const validValue = (v: string, d?: number): boolean => {
   const numV = Number(v)
 
@@ -94,6 +98,15 @@ const validValue = (v: string, d?: number): boolean => {
   }
 
   return true
+}
+
+const getFirstFiveTokens = (tokens: ModifiedTokens): ModifiedTokens => {
+  return Object.keys(tokens)
+    .slice(0, 5)
+    .reduce((acc, key) => {
+      acc[key] = tokens[key]
+      return acc
+    }, {} as ModifiedTokens)
 }
 
 export default function TokenSettings() {
@@ -124,13 +137,20 @@ export default function TokenSettings() {
     const f = tokenFilter.trim().toLowerCase()
     const filtered = Object.values(tokens).filter((token) => {
       const { symbol, name } = activeTokens[token.address]
-      return symbol?.includes(f) || name?.includes(f) || token.address.includes(f)
+      return symbol?.includes(f) || name?.includes(f) || token.address.toLowerCase().includes(f)
     })
+    console.group('%cFilter', 'color: orange;')
+    console.log('tokenFilter', tokenFilter)
+    console.log('filtered', filtered)
+    console.groupEnd()
+
     setFilteredTokens(
-      filtered.reduce((acc, token) => {
-        acc[token.address] = token
-        return acc
-      }, {} as ModifiedTokens)
+      getFirstFiveTokens(
+        filtered.reduce((acc, token) => {
+          acc[token.address] = token
+          return acc
+        }, {} as ModifiedTokens)
+      )
     )
   }, [tokenFilter, tokens, activeTokens])
 
@@ -173,14 +193,9 @@ export default function TokenSettings() {
     }
   }
 
-  let tokensToUse = tokens
+  let tokensToUse = getFirstFiveTokens(tokens)
   if (tokenFilter && Object.keys(filteredTokens).length > 0) {
-    tokensToUse = Object.keys(filteredTokens)
-      .slice(0, 5)
-      .reduce((acc, key) => {
-        acc[key] = filteredTokens[key]
-        return acc
-      }, {} as ModifiedTokens)
+    tokensToUse = filteredTokens
   }
 
   return (
@@ -207,7 +222,7 @@ export default function TokenSettings() {
         </StyledTokensListRow>
 
         {tokenFilter && Object.keys(filteredTokens).length === 0 ? (
-          <div>No matches.</div>
+          <StyledMessage>No matches.</StyledMessage>
         ) : (
           Object.keys(tokensToUse)
             .sort((ka, kb) => {
