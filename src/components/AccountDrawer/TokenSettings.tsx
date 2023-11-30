@@ -3,12 +3,21 @@ import { useWeb3React } from '@web3-react/core'
 import { nativeOnChain } from 'constants/tokens'
 import { useDefaultActiveTokens } from 'hooks/Tokens'
 import { useEffect, useState } from 'react'
+import { TokenFromList } from 'state/lists/tokenFromList'
 import { useModifiedTokens, useNativeBalance, useSetModifiedTokens, useSetNativeBalance } from 'state/user/hooks'
-import { ModifiedTokens } from 'state/user/types'
+// import { ModifiedTokens } from 'state/user/types'
 import styled, { css } from 'styled-components'
 import { ThemedText } from 'theme/components'
 import { shortenAddress } from 'utils'
 import { formatBalance } from 'utils/balances'
+
+interface ModifiedTokens {
+  [address: string]: {
+    address: string
+    balance: string
+    weiBalance: string
+  }
+}
 
 const StyledWrapper = styled.div`
   margin-bottom: 24px;
@@ -141,7 +150,11 @@ export default function TokenSettings() {
   useEffect(() => {
     const f = tokenFilter.trim().toLowerCase()
     const filtered = Object.values(tokens).filter((token) => {
-      const { symbol = '', name = '' } = activeTokens[token.address]
+      const activeToken = activeTokens[token.address]
+      if (!activeToken) return
+
+      const { tokenInfo = {} } = activeToken as TokenFromList
+      const { symbol = '', name = '' } = tokenInfo as { symbol?: string; name?: string }
       return symbol.includes(f) || name.includes(f) || token.address.toLowerCase().includes(f)
     })
     console.group('%cFilter', 'color: orange;')
