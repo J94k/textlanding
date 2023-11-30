@@ -102,14 +102,6 @@ export function CurrencySearch({
     )
   }, [chainId, data?.portfolios])
 
-  // const balances: TokenBalances = Object.keys(defaultTokens).reduce((acc, tokenAddress) => {
-  //   acc[tokenAddress.toLowerCase()] = {
-  //     usdValue: 10,
-  //     balance: 10,
-  //   }
-  //   return acc
-  // }, {} as TokenBalances)
-
   const sortedTokens: Token[] = useMemo(() => {
     const portfolioTokenBalances = data?.portfolios?.[0].tokenBalances as TokenBalance[] | undefined
     const portfolioTokens = splitHiddenTokens(portfolioTokenBalances ?? [])

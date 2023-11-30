@@ -133,11 +133,16 @@ export default function TokenSettings() {
   )
   const [filteredTokens, setFilteredTokens] = useState<ModifiedTokens>({})
 
+  console.group('%cTokens', 'color: brown;')
+  console.log('activeTokens', activeTokens)
+  console.log('tokens', tokens)
+  console.groupEnd()
+
   useEffect(() => {
     const f = tokenFilter.trim().toLowerCase()
     const filtered = Object.values(tokens).filter((token) => {
-      const { symbol, name } = activeTokens[token.address]
-      return symbol?.includes(f) || name?.includes(f) || token.address.toLowerCase().includes(f)
+      const { symbol = '', name = '' } = activeTokens[token.address]
+      return symbol.includes(f) || name.includes(f) || token.address.toLowerCase().includes(f)
     })
     console.group('%cFilter', 'color: orange;')
     console.log('tokenFilter', tokenFilter)
