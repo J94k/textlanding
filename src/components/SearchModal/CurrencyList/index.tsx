@@ -13,6 +13,7 @@ import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import styled from 'styled-components'
 import { ThemedText } from 'theme/components'
+import { getBalanceValue } from 'utils/balances'
 import { NumberType, useFormatter } from 'utils/formatNumbers'
 
 import { useIsUserAddedToken } from '../../../hooks/Tokens'
@@ -25,7 +26,7 @@ import { LoadingRows, MenuItem } from '../styled'
 import { scrollbarStyle } from './index.css'
 
 function currencyKey(currency: Currency): string {
-  return currency.isToken ? currency.address : 'ETHER'
+  return currency.isToken ? `${currency.chainId}_${currency.symbol}_${currency.address}` : 'ETHER'
 }
 
 const StyledBalanceText = styled(Text)`
@@ -256,26 +257,23 @@ export default function CurrencyList({
   }
 }) {
   const itemData: Currency[] = useMemo(() => {
-    if (otherListTokens && otherListTokens?.length > 0) {
-      return [...currencies, ...otherListTokens]
+    let data = []
+    if (otherListTokens && otherListTokens.length > 0) {
+      data = [...currencies, ...otherListTokens]
+    } else {
+      data = currencies
     }
-    return currencies
-  }, [currencies, otherListTokens])
+    return data.sort((a, b) => {
+      const bA = getBalanceValue(a, customNativeBalance, customBalances, balances)
+      const bB = getBalanceValue(b, customNativeBalance, customBalances, balances)
+      return parseFloat(bB) - parseFloat(bA)
+    })
+  }, [currencies, otherListTokens, customNativeBalance, customBalances, balances])
 
   const Row = useCallback(
     function TokenRow({ data, index, style }: TokenRowProps) {
-      const row: Currency = data[index]
-      const currency = row
-      let balanceValue
-
-      if (currency.isNative && customNativeBalance) {
-        balanceValue = customNativeBalance.balance
-      } else {
-        const balanceKey = currency.isToken ? currency.address : ''
-        const customBalanceObj = customBalances[balanceKey]
-        balanceValue = customBalanceObj ? customBalanceObj.balance : balances[balanceKey]?.balance ?? 0
-      }
-
+      const currency: Currency = data[index]
+      const balanceValue = getBalanceValue(currency, customNativeBalance, customBalances, balances)
       const balance =
         tryParseCurrencyAmount(String(balanceValue), currency) ?? CurrencyAmount.fromRawAmount(currency, 0)
 
@@ -318,10 +316,13 @@ export default function CurrencyList({
     ]
   )
 
-  const itemKey = useCallback((index: number, data: typeof itemData) => {
-    const currency = data[index]
-    return currencyKey(currency)
-  }, [])
+  const itemKey = useCallback(
+    (index: number, data: typeof itemData) => {
+      const currency = data[index]
+      return currencyKey(currency)
+    },
+    [itemData]
+  )
 
   return (
     <div data-testid="currency-list-wrapper">
