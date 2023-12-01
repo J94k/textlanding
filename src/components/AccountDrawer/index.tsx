@@ -119,6 +119,7 @@ const AccountDrawerWrapper = styled.div<{ open: boolean }>`
     z-index: ${Z_INDEX.modal};
     position: absolute;
     margin-right: 0;
+    padding-bottom: 40px;
     top: ${({ open }) => (open ? `calc(-1 * (100% - ${DRAWER_TOP_MARGIN_MOBILE_WEB}))` : 0)};
 
     width: 100%;
