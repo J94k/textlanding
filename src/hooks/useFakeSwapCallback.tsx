@@ -1,8 +1,10 @@
+import type { TransactionResponse } from '@ethersproject/providers'
 import { Percent, TradeType } from '@uniswap/sdk-core'
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 import { useWeb3React } from '@web3-react/core'
 import { useCallback } from 'react'
 import { InterfaceTrade } from 'state/routing/types'
+import { TradeFillType } from 'state/routing/types'
 import { isUniswapXTrade } from 'state/routing/utils'
 import { useAddOrder } from 'state/signatures/hooks'
 import { UniswapXOrderDetails } from 'state/signatures/types'
@@ -42,6 +44,7 @@ export function useFakeSwapCallback(
     if (!blankTransactionCallback) throw new Error('missing transaction callback')
     if (!trade) throw new Error('missing trade')
     if (!account || !chainId) throw new Error('wallet must be connected to swap')
+    if (!deadline) throw new Error('missing transaction deadline')
 
     const response = await blankTransactionCallback()
 
@@ -91,7 +94,18 @@ export function useFakeSwapCallback(
       }
     }
 
-    return { response }
+    return isUniswapXTrade(trade)
+      ? {
+          type: TradeFillType.UniswapX as const,
+          response: {
+            orderHash: response.hash,
+            deadline: deadline.toNumber(),
+          },
+        }
+      : {
+          type: TradeFillType.Classic as const,
+          response,
+        }
   }, [
     account,
     chainId,
@@ -99,6 +113,7 @@ export function useFakeSwapCallback(
     blankTransactionCallback,
     modifiedTokens,
     nativeBalance,
+    deadline,
     setModifiedToken,
     setNativeBalance,
   ])
@@ -140,13 +155,13 @@ export function useFakeSwapCallback(
           //   name: "orderHash",
           //   type: "bytes32",
           // },
-          result.response.hash, // result.response.orderHash,
+          'orderHash' in result.response ? result.response.orderHash : result.response.hash,
           chainId,
           deadline.toNumber(),
           swapInfo as UniswapXOrderDetails['swapInfo']
         )
       } else {
-        addTransaction(result.response, swapInfo, deadline?.toNumber())
+        addTransaction(result.response as TransactionResponse, swapInfo, deadline?.toNumber())
       }
     }
 

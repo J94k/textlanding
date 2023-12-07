@@ -1,5 +1,5 @@
+import { Currency } from '@uniswap/sdk-core'
 import Big from 'big.js'
-import { Currency} from '@uniswap/sdk-core'
 import { TokenBalances } from 'lib/hooks/useTokenList/sorting'
 
 type Balance = number | string
@@ -39,17 +39,17 @@ export function subtractBalance(balance: Balance, amountToSubtract: Balance, dec
 
 export const getBalanceValue = (
   currency: Currency,
-  customNativeBalance: { balance: string, weiBalance: string } | null,
-  customBalances: { [addr: string]: { balance: string, weiBalance: string } },
+  customNativeBalance: { balance: string; weiBalance: string } | null,
+  customBalances: { [addr: string]: { balance: string; weiBalance: string } },
   balances: TokenBalances
 ): string => {
-  let v;
+  let v
   if (currency.isNative && customNativeBalance) {
-    v = customNativeBalance.balance;
+    v = customNativeBalance.balance
   } else {
-    const balanceKey = currency.isToken ? currency.address : '';
-    const customBalanceObj = customBalances[balanceKey];
-    v = customBalanceObj?.balance || balances[balanceKey]?.balance || '0';
+    const balanceKey = currency.isToken ? currency.address : ''
+    const customBalanceObj = customBalances[balanceKey]
+    v = customBalanceObj?.balance || balances[balanceKey]?.balance || '0'
   }
-  return String(v);
-};
+  return String(v)
+}
