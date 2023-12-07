@@ -34,13 +34,13 @@ import { getChainInfo } from 'constants/chainInfo'
 import { asSupportedChain, isSupportedChain } from 'constants/chains'
 import { getSwapCurrencyId, TOKEN_SHORTHANDS } from 'constants/tokens'
 import { useCurrency, useDefaultActiveTokens } from 'hooks/Tokens'
-import { useFakeSwapCallback } from 'hooks/useFakeSwapCallback'
-import useFakeWrapCallback, { WrapErrorText, WrapType } from 'hooks/useFakeWrapCallback'
+import { useFakeSwapCallback, useFakeSwapTransaction } from 'hooks/useFakeSwapCallback'
+import { SwapResult } from 'hooks/useFakeSwapCallback'
+import { useFakeWrapCallback, useFakeWrapTransaction, WrapErrorText, WrapType } from 'hooks/useFakeWrapCallback'
 import { useIsSwapUnsupported } from 'hooks/useIsSwapUnsupported'
 import { useMaxAmountIn } from 'hooks/useMaxAmountIn'
 import usePermit2Allowance, { AllowanceState } from 'hooks/usePermit2Allowance'
 import usePrevious from 'hooks/usePrevious'
-import { SwapResult } from 'hooks/useSwapCallback'
 import { useSwitchChain } from 'hooks/useSwitchChain'
 import { useUSDPrice } from 'hooks/useUSDPrice'
 import JSBI from 'jsbi'
@@ -187,7 +187,7 @@ export function Swap({
   disableTokenInputs?: boolean
 }) {
   const connectionReady = useConnectionReady()
-  const { account, chainId: connectedChainId, connector } = useWeb3React()
+  const { account, chainId: connectedChainId, connector, provider } = useWeb3React()
   const trace = useTrace()
 
   // token warning stuff
@@ -309,7 +309,8 @@ export function Swap({
     wrapType,
     execute: onWrap,
     inputError: wrapInputError,
-  } = useFakeWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
+  } = useFakeWrapTransaction(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
+  const fakeWrapCallback = useFakeWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
   const showWrap: boolean = wrapType !== WrapType.NOT_APPLICABLE
 
   const parsedAmounts = useMemo(
@@ -443,8 +444,9 @@ export function Swap({
     return { amountIn: fiatValueTradeInput.data, amountOut: fiatValueTradeOutput.data, feeUsd: outputFeeFiatValue }
   }, [fiatValueTradeInput.data, fiatValueTradeOutput.data, outputFeeFiatValue])
 
-  // the callback to execute the swap
-  const swapCallback = useFakeSwapCallback(trade, swapFiatValues, allowedSlippage)
+  // the callbacks to execute the swap
+  const swapTransactionCallback = useFakeSwapTransaction(trade, swapFiatValues, allowedSlippage)
+  const swapCallback = useFakeSwapCallback(trade)
 
   const handleContinueToReview = useCallback(() => {
     setSwapState({
@@ -464,31 +466,35 @@ export function Swap({
   }, [])
 
   const handleSwap = useCallback(() => {
-    if (!swapCallback) {
+    if (!swapTransactionCallback || !swapCallback || !provider) {
       return
     }
     if (preTaxStablecoinPriceImpact && !confirmPriceImpactWithoutFee(preTaxStablecoinPriceImpact)) {
       return
     }
-    swapCallback()
-      .then((result) => {
+    swapTransactionCallback()
+      .then(async (result) => {
         setSwapState((currentState) => ({
           ...currentState,
           swapError: undefined,
           swapResult: result,
         }))
+        if ('hash' in result.response) {
+          await provider.waitForTransaction(result.response.hash)
+        }
+        await swapCallback()
       })
-      .catch((error) => {
+      .catch((error: Error) => {
         setSwapState((currentState) => ({
           ...currentState,
           swapError: error,
           swapResult: undefined,
         }))
       })
-  }, [swapCallback, preTaxStablecoinPriceImpact])
+  }, [provider, swapTransactionCallback, swapCallback, preTaxStablecoinPriceImpact])
 
   const handleOnWrap = useCallback(async () => {
-    if (!onWrap) return
+    if (!onWrap || !fakeWrapCallback || !provider) return
     try {
       const txHash = await onWrap()
       setSwapState((currentState) => ({
@@ -497,6 +503,11 @@ export function Swap({
         txHash,
       }))
       onUserInput(Field.INPUT, '')
+      if (txHash) {
+        await provider.waitForTransaction(txHash)
+      }
+      await fakeWrapCallback()
+      // TODO wait for final and update balances
     } catch (error) {
       if (!didUserReject(error)) {
         sendAnalyticsEvent(SwapEventName.SWAP_ERROR, {
@@ -512,7 +523,7 @@ export function Swap({
         txHash: undefined,
       }))
     }
-  }, [currencies, onUserInput, onWrap, wrapType])
+  }, [provider, currencies, onUserInput, onWrap, fakeWrapCallback, wrapType])
 
   // warnings on the greater of fiat value price impact and execution price impact
   const { priceImpactSeverity, largerPriceImpact } = useMemo(() => {

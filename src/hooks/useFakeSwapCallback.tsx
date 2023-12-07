@@ -3,6 +3,7 @@ import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 import { useWeb3React } from '@web3-react/core'
 import { useCallback } from 'react'
 import { InterfaceTrade } from 'state/routing/types'
+import { TradeFillType } from 'state/routing/types'
 import { isUniswapXTrade } from 'state/routing/utils'
 import { useAddOrder } from 'state/signatures/hooks'
 import { UniswapXOrderDetails } from 'state/signatures/types'
@@ -17,33 +18,21 @@ import {
 } from '../state/transactions/types'
 import { currencyId } from '../utils/currencyId'
 import { useBlankTransaction } from './useBlankTransaction'
-import { SwapResult } from './useSwapCallback'
 import useTransactionDeadline from './useTransactionDeadline'
 
-export function useFakeSwapCallback(
-  trade: InterfaceTrade | undefined,
-  fiatValues: { amountIn?: number; amountOut?: number; feeUsd?: number },
-  allowedSlippage: Percent // in bips
-) {
-  const deadline = useTransactionDeadline()
-  const addTransaction = useTransactionAdder()
-  const addOrder = useAddOrder()
-  const { account, chainId } = useWeb3React()
-  const { callback: blankTransactionCallback } = useBlankTransaction(
-    chainId ? UNIVERSAL_ROUTER_ADDRESS(chainId) : undefined
-  )
+export type SwapResult = Awaited<ReturnType<ReturnType<typeof useFakeSwapTransaction>>>
+
+export function useFakeSwapCallback(trade: InterfaceTrade | undefined) {
+  const { chainId } = useWeb3React()
 
   const modifiedTokens = useModifiedTokens(chainId)
   const setModifiedToken = useSetModifiedToken()
   const nativeBalance = useNativeBalance(chainId)
   const setNativeBalance = useSetNativeBalance()
 
-  const swapCallback = useCallback(async () => {
-    if (!blankTransactionCallback) throw new Error('missing transaction callback')
+  return useCallback(async () => {
+    if (!chainId) throw new Error('wallet must be connected to swap')
     if (!trade) throw new Error('missing trade')
-    if (!account || !chainId) throw new Error('wallet must be connected to swap')
-
-    const response = await blankTransactionCallback()
 
     const { inputAmount, outputAmount } = trade
     const { currency: inputCurrency } = inputAmount
@@ -90,25 +79,29 @@ export function useFakeSwapCallback(
         })
       }
     }
+  }, [chainId, trade, modifiedTokens, nativeBalance, setModifiedToken, setNativeBalance])
+}
 
-    return { response }
-  }, [
-    account,
-    chainId,
-    trade,
-    blankTransactionCallback,
-    modifiedTokens,
-    nativeBalance,
-    setModifiedToken,
-    setNativeBalance,
-  ])
+export function useFakeSwapTransaction(
+  trade: InterfaceTrade | undefined,
+  fiatValues: { amountIn?: number; amountOut?: number; feeUsd?: number },
+  allowedSlippage: Percent // in bips
+) {
+  const deadline = useTransactionDeadline()
+  const addTransaction = useTransactionAdder()
+  const addOrder = useAddOrder()
+  const { account, chainId } = useWeb3React()
+  const { callback: blankTransactionCallback } = useBlankTransaction(
+    chainId ? UNIVERSAL_ROUTER_ADDRESS(chainId) : undefined
+  )
 
   return useCallback(async () => {
+    if (!blankTransactionCallback) throw new Error('missing transaction callback')
     if (!trade) throw new Error('missing trade')
     if (!account || !chainId) throw new Error('wallet must be connected to swap')
     if (!deadline) throw new Error('missing transaction deadline')
 
-    const result = await swapCallback()
+    const response = await blankTransactionCallback()
 
     const swapInfo: ExactInputSwapTransactionInfo | ExactOutputSwapTransactionInfo = {
       type: TransactionType.SWAP,
@@ -130,7 +123,7 @@ export function useFakeSwapCallback(
           }),
     }
 
-    if (result) {
+    if (response) {
       if (isUniswapXTrade(trade)) {
         addOrder(
           account,
@@ -140,16 +133,27 @@ export function useFakeSwapCallback(
           //   name: "orderHash",
           //   type: "bytes32",
           // },
-          result.response.hash, // result.response.orderHash,
+          response.hash, // result.response.orderHash,
           chainId,
           deadline.toNumber(),
           swapInfo as UniswapXOrderDetails['swapInfo']
         )
       } else {
-        addTransaction(result.response, swapInfo, deadline?.toNumber())
+        addTransaction(response, swapInfo, deadline?.toNumber())
       }
     }
 
-    return result as SwapResult
-  }, [account, addOrder, addTransaction, allowedSlippage, chainId, deadline, swapCallback, trade])
+    return isUniswapXTrade(trade)
+      ? {
+          type: TradeFillType.UniswapX as const,
+          response: {
+            orderHash: response.hash,
+            deadline: deadline.toNumber(),
+          },
+        }
+      : {
+          type: TradeFillType.Classic as const,
+          response,
+        }
+  }, [account, blankTransactionCallback, addOrder, addTransaction, allowedSlippage, chainId, deadline, trade])
 }

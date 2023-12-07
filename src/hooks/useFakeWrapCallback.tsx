@@ -4,6 +4,7 @@ import { useWeb3React } from '@web3-react/core'
 import { WRAPPED_NATIVE_CURRENCY } from 'constants/tokens'
 import useNativeCurrency from 'lib/hooks/useNativeCurrency'
 import tryParseCurrencyAmount from 'lib/utils/tryParseCurrencyAmount'
+import { useCallback } from 'react'
 import { useMemo, useState } from 'react'
 import { useModifiedTokens, useNativeBalance, useSetModifiedToken, useSetNativeBalance } from 'state/user/hooks'
 import { addBalance, formatBalance, subtractBalance } from 'utils/balances'
@@ -50,7 +51,81 @@ export function WrapErrorText({ wrapInputError }: { wrapInputError: WrapInputErr
   }
 }
 
-export default function useFakeWrapCallback(
+export function useFakeWrapCallback(
+  inputCurrency: Currency | undefined | null,
+  outputCurrency: Currency | undefined | null,
+  typedValue: string | undefined
+) {
+  const { chainId } = useWeb3React()
+  // We can always parse the amount typed as the input currency, since wrapping is 1:1
+  const inputAmount = useMemo(
+    () => tryParseCurrencyAmount(typedValue, inputCurrency ?? undefined),
+    [inputCurrency, typedValue]
+  )
+
+  const modifiedTokens = useModifiedTokens(chainId)
+  const setModifiedToken = useSetModifiedToken()
+  const nativeBalance = useNativeBalance(chainId)
+  const setNativeBalance = useSetNativeBalance()
+
+  const exactAmount = inputAmount?.toExact()
+
+  return useCallback(async (): Promise<void> => {
+    if (!chainId || !inputCurrency || !outputCurrency) return
+    if (!exactAmount) return
+
+    if (inputCurrency.isNative) {
+      setNativeBalance(
+        chainId,
+        nativeBalance ? subtractBalance(nativeBalance.balance, exactAmount, 18) : formatBalance(exactAmount, 18)
+      )
+    } else {
+      const inputToken = modifiedTokens?.[inputCurrency.address]
+      if (inputToken) {
+        setModifiedToken(chainId, inputCurrency.address, {
+          address: inputCurrency.address,
+          ...subtractBalance(inputToken.balance, exactAmount, inputCurrency.decimals),
+        })
+      } else {
+        setModifiedToken(chainId, inputCurrency.address, {
+          address: inputCurrency.address,
+          ...formatBalance(exactAmount, inputCurrency.decimals),
+        })
+      }
+    }
+
+    if (outputCurrency.isNative) {
+      setNativeBalance(
+        chainId,
+        nativeBalance ? addBalance(nativeBalance.balance, exactAmount, 18) : formatBalance(exactAmount, 18)
+      )
+    } else {
+      const outputToken = modifiedTokens?.[outputCurrency.address]
+      if (outputToken) {
+        setModifiedToken(chainId, outputCurrency.address, {
+          ...outputToken,
+          ...addBalance(outputToken.balance, exactAmount, outputCurrency.decimals),
+        })
+      } else {
+        setModifiedToken(chainId, outputCurrency.address, {
+          address: outputCurrency.address,
+          ...formatBalance(exactAmount, outputCurrency.decimals),
+        })
+      }
+    }
+  }, [
+    chainId,
+    exactAmount,
+    inputCurrency,
+    modifiedTokens,
+    nativeBalance,
+    outputCurrency,
+    setModifiedToken,
+    setNativeBalance,
+  ])
+}
+
+export function useFakeWrapTransaction(
   inputCurrency: Currency | undefined | null,
   outputCurrency: Currency | undefined | null,
   typedValue: string | undefined
@@ -67,10 +142,6 @@ export default function useFakeWrapCallback(
   const { callback: blankTransactionCallback } = useBlankTransaction(
     chainId ? WRAPPED_NATIVE_CURRENCY[chainId]?.address : undefined
   )
-  const modifiedTokens = useModifiedTokens(chainId)
-  const setModifiedToken = useSetModifiedToken()
-  const nativeBalance = useNativeBalance(chainId)
-  const setNativeBalance = useSetNativeBalance()
 
   // This allows an async error to propagate within the React lifecycle.
   // Without rethrowing it here, it would not show up in the UI - only the dev console.
@@ -85,50 +156,6 @@ export default function useFakeWrapCallback(
 
     const hasInputAmount = Boolean(inputAmount?.greaterThan('0'))
     const sufficientBalance = inputAmount && balance && !balance.lessThan(inputAmount)
-    const exactAmount = inputAmount?.toExact()
-
-    const updateBalancesAfterSwap = async () => {
-      if (!exactAmount) return
-      if (inputCurrency.isNative) {
-        setNativeBalance(
-          chainId,
-          nativeBalance ? subtractBalance(nativeBalance.balance, exactAmount, 18) : formatBalance(exactAmount, 18)
-        )
-      } else {
-        const inputToken = modifiedTokens?.[inputCurrency.address]
-        if (inputToken) {
-          setModifiedToken(chainId, inputCurrency.address, {
-            address: inputCurrency.address,
-            ...subtractBalance(inputToken.balance, exactAmount, inputCurrency.decimals),
-          })
-        } else {
-          setModifiedToken(chainId, inputCurrency.address, {
-            address: inputCurrency.address,
-            ...formatBalance(exactAmount, inputCurrency.decimals),
-          })
-        }
-      }
-
-      if (outputCurrency.isNative) {
-        setNativeBalance(
-          chainId,
-          nativeBalance ? addBalance(nativeBalance.balance, exactAmount, 18) : formatBalance(exactAmount, 18)
-        )
-      } else {
-        const outputToken = modifiedTokens?.[outputCurrency.address]
-        if (outputToken) {
-          setModifiedToken(chainId, outputCurrency.address, {
-            ...outputToken,
-            ...addBalance(outputToken.balance, exactAmount, outputCurrency.decimals),
-          })
-        } else {
-          setModifiedToken(chainId, outputCurrency.address, {
-            address: outputCurrency.address,
-            ...formatBalance(exactAmount, outputCurrency.decimals),
-          })
-        }
-      }
-    }
 
     if (inputCurrency.isNative && weth.equals(outputCurrency)) {
       return {
@@ -153,7 +180,6 @@ Please file a bug detailing how this happened - https://github.com/Uniswap/inter
                   currencyAmountRaw: inputAmount?.quotient.toString(),
                   chainId,
                 })
-                await updateBalancesAfterSwap()
                 return response.hash
               }
             : undefined,
@@ -177,7 +203,6 @@ Please file a bug detailing how this happened - https://github.com/Uniswap/inter
                     currencyAmountRaw: inputAmount?.quotient.toString(),
                     chainId,
                   })
-                  await updateBalancesAfterSwap()
                   return response.hash
                 } catch (error) {
                   console.error('Could not withdraw', error)
@@ -203,9 +228,5 @@ Please file a bug detailing how this happened - https://github.com/Uniswap/inter
     balance,
     addTransaction,
     blankTransactionCallback,
-    modifiedTokens,
-    nativeBalance,
-    setModifiedToken,
-    setNativeBalance,
   ])
 }

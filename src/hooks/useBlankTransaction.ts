@@ -17,7 +17,6 @@ export function useBlankTransaction(to: string | undefined) {
         })
         .then((res) => res)
 
-      await provider.waitForTransaction(res.hash)
       return res
     }
   }, [to, account, chainId, provider])
